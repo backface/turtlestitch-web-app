@@ -14,13 +14,14 @@
 
 <div class="container">
 	<div class="row">
-		<div class="col-md-4"><h3><img class="pull-right bargmin" src="{{gravatar_url}}" /></h3></div>
+		<div class="col-md-4"><h3><img class="pull-right bargmin" src="{{gravatar_large}}" /></h3></div>
 		<div class="col-md-4">
 			<h3>{{username}} 
 			% if fullname: 
-				{{fullname}}
+				<br />{{fullname}}
 			% end
-		</div>
+			</h3>
+		</div> 
 	</div>
 	
 	% if is_me:

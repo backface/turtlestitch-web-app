@@ -706,6 +706,7 @@ def profile_show(db,username=""):
 			description=description,
 			link=link,
 			gravatar_url=gravatar_url,
+			gravatar_large=get_gravatar_url(email,96),
 			is_me=is_me,
 			is_admin=is_admin(userinfo),
 			message="", header="")	
@@ -841,9 +842,8 @@ def render_message(db,string,header=""):
 		message_header=header)		
 
 
-def get_gravatar_url(email):
+def get_gravatar_url(email,size=24):
 	#default = "http://www.example.com/default.jpg"
-	size = 24	
 	gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(email.lower()).hexdigest() + "?"
 	#gravatar_url += urllib.urlencode({'d':default, 's':str(size)})	
 	gravatar_url += urllib.urlencode({'s':str(size)})	
