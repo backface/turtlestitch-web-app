@@ -1,5 +1,5 @@
 % rebase('base.tpl', title=' - Signup')
-
+<div class="container">
 
 <h3 class="form-signup-heading">Sign up</h3> 
 
@@ -95,6 +95,8 @@
     
  
 </form>
+</div>
+
 
 <script>
 	$(document).ready(function() {

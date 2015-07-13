@@ -100,7 +100,6 @@
 			<a href="/delete/{{item['id']}}"><span class="glyphicon glyphicon-remove"></span> delete</a>		
 			% end
 			</p>
-			
 
 		</div>
 		

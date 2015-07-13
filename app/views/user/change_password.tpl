@@ -1,5 +1,6 @@
 % rebase('base.tpl', title=' - Change Password')
 
+<div class="container">
 
 <h3 class="form-signup-heading">Change Password</h3> 
 
@@ -56,7 +57,7 @@
 	  </div>	  
 	</div> 
 	
-  <div class="form-group">
+  <div class=orm-group">
 	<div class="col-md-3">  
 	   <div class="btn-group">    
 		<button class="btn btn-lg btn-primary btn-block" type="submit" id="update">Update</button>     
@@ -67,9 +68,9 @@
   
   </div>
     
- 
 </form>
 
+</div>
 <script>
 	$(document).ready(function() {
 		$("input").keyup(function () {

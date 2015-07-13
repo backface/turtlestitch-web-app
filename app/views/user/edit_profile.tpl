@@ -1,5 +1,6 @@
 % rebase('base.tpl', title=' - Edit profile')
 
+<div class="container">
 
 <h3 class="form-signup-heading">Edit profile</h3> 
 
@@ -93,3 +94,5 @@
   <div class="col-md-6">
 		Profile images via <a href="http://www.gravatar.com">gravatar.com</a>
   </div>
+
+</div>

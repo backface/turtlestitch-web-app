@@ -31,7 +31,8 @@ project_www_path = "/media/projects"
 @app.route('/page')
 def index(db):
 	userinfo = is_logged_in(db)
-	return template('index', userinfo=userinfo)
+	return page_view(db,"index")
+	#return template('index', userinfo=userinfo)
 	
 
 ###################      
@@ -603,7 +604,6 @@ def is_admin(userinfo):
 @app.route('/login')
 def login(db):
     userinfo = is_logged_in(db)
-    print userinfo
     if userinfo:
         redirect("/gallery")
     else:
@@ -616,6 +616,9 @@ def do_login(db):
     
     c = db.execute('select id, password from users where username = ?', (submitted_username,))
     row = c.fetchone()
+    if not row:
+		return template('user/login', userinfo=False, message="username or password do not match")
+		
     cryptedpassword = row[1]
     if not crypt.crypt(submitted_password,cryptedpassword) == cryptedpassword or not row:
         return template('user/login', userinfo=False, message="username or password do not match")
@@ -657,7 +660,7 @@ def page_new(db):
 			
 @app.route('/page/create',method="POST")
 def page_create(db):
-	return page_update(db,True)
+	return page_update(db,"",True)
 
 @app.route('/page/edit/<slug>')
 def page_edit(db,slug=""):
@@ -677,18 +680,19 @@ def page_edit(db,slug=""):
 		new_page=False,
 		message="")		
 	else:
-		return render_error("Page not found")   
+		return render_error(db,"Page not found")   
 		
-@app.route('/page/update',method="POST")
-def page_update(db,new_page=False):
+@app.route('/page/update/<old_slug>',method="POST")
+def page_update(db,old_slug,new_page=False,):
 	userinfo = is_logged_in(db) 
 	if not is_admin(userinfo):
 		return render_error(db,"NOT ALLOWED")
 	else:
+		
 		import re
 		submitted_title = request.forms.get('title').decode("utf-8")
 		submitted_content = request.forms.get('content').decode("utf-8")
-		submitted_slug = request.forms.get('slug')
+		submitted_slug = request.forms.get('slug').decode("utf-8")
 		
 		message = []
 		error = False	
@@ -698,25 +702,26 @@ def page_update(db,new_page=False):
 			error = True
 			message.append("Title is required")			
 	
-		print submitted_title;
 		if not error:
 			if submitted_slug == "" or submitted_slug== None:
 				slug = re.sub(r"[^a-zA-Z0-9\n\.]", "_", submitted_title)
 			else:		
 				slug = re.sub(r"[^a-zA-Z0-9\n\.]", "_", submitted_slug)	
-			
+		 
 			if not new_page:			
 				c = db.execute('update pages set title=?, slug=?, content=? where slug=?', 
-					(submitted_title, slug, submitted_content.decode("utf-8"), slug))
+					(submitted_title, slug, submitted_content, old_slug))
 			else:				
 				c = db.execute('insert into pages (title,slug, content) values (?, ?, ?)', 
-					(submitted_title, slug, submitted_content.decode("utf-8")))			
+					(submitted_title, slug, submitted_content))	
 
 			return template('page/view',
 				userinfo = userinfo,
 				new_page=new_page,
 				pagetitle=submitted_title,
 				content=submitted_content,
+				is_admin = True,
+				slug=slug,
 				message="page updated.",
 				message_header="Success")		
 		else:
@@ -740,6 +745,8 @@ def page_view(db,slug=""):
 		userinfo=userinfo,
 		pagetitle=row[0],
 		content=row[1],
+		is_admin = is_admin(userinfo),
+		slug = slug,
 		message="")		
 	else:
 		return render_error(db,"Page not found")   
@@ -858,7 +865,7 @@ def profile_show(db,username=""):
 			order by designs.timestamp desc
 			''',(username,))
 		rows = c.fetchall()
-		print rows
+
 		items = []
 		for row in rows:
 			item = {}
@@ -874,8 +881,7 @@ def profile_show(db,username=""):
 			item["exp_file"] = "%s.exp" % (row[0])
 			item["media_path"] = upload_www_path
 			items.append(item)
-	
-		print items
+
 		return template('user/profile',
 			items=items, 
 			userinfo=userinfo, 

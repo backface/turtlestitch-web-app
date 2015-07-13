@@ -50,9 +50,6 @@
       </div>
     </nav>
 
-	<div class="container">
-		{{!base}}
-	</div>
-
+	{{!base}}
 </body>
 </html>
