@@ -20,10 +20,11 @@
 
 % end
 
-<form id="profilmeFor" class="form-horizontal" method="post" action="/edit_profile">
+
   
 	<div class="col-md-5">
-	
+
+<form id="profilmeFor" class="form-horizontal" method="post" action="/edit_profile">	
 	<div class="form-group has-feedback">
 	  <label for="email" class="control-label col-md-3">E-Mail:</label>
 	  <div class="input-group">
@@ -47,20 +48,27 @@
 	  </div>
 	</div>	  
 	
-  <div class="form-group">
-	<div class="col-md-3">  
-	   <div class="btn-group">    
-		<button class="btn btn-lg btn-primary btn-block" type="submit" id="update">Update</button>     
-	  </div> 
-	</div>
-  </div>
-  
-  
-  </div>
-    
- 
-</form>
+	<div class="form-group pull-right">
+	  <label for="description" class="control-label">About me:</label>
+	  <div class="input-group">
+		<textarea cols="40" rows="10" name="description" id="description">{{description}}</textarea>
+	  </div>
+	</div>	 
+		
+	<div class='clearfix'></div>
+	
+	  <div class="form-group ">
+		<div class="col-md-3">  
+		   <div class="btn-group">    
+			<button class="btn btn-lg btn-primary btn-block" type="submit" id="update">Update</button>     
+		  </div> 
+		</div>
+	  </div>
 
+  
+</form> 
+  </div>
+  
 <script>
 	$(document).ready(function() {
 		$("input").keyup(function () {
@@ -77,3 +85,11 @@
 	});
 });		
 </script>
+
+  <div class="col-md-1">
+		&nbsp;
+  </div>
+
+  <div class="col-md-6">
+		Profile images via <a href="http://www.gravatar.com">gravatar.com</a>
+  </div>

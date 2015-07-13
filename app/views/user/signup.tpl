@@ -66,7 +66,7 @@
 		<div class="input-group-addon">
 		  <span class="glyphicon glyphicon-lock"></span>
 		</div>
-		<input type="password" class="form-control" name="password" id="password" placeholder="Password" pattern="\w{5,20}" />
+		<input type="password" class="form-control" name="password" id="password" placeholder="Password" />
 		<span class="glyphicion form-control-feedback"></span>
 	  </div>
 	</div> 
@@ -77,13 +77,13 @@
 		<div class="input-group-addon">
 		  <span class="glyphicon glyphicon-lock"></span>
 		</div>
-		<input type="password" required class="form-control" name="confirm_password" id="confirm_password" placeholder="Confirm Password"  pattern="\w{5,20}" />
+		<input type="password" required class="form-control" name="confirm_password" id="confirm_password" placeholder="Confirm Password" />
 		<span class="glyphicion form-control-feedback"></span>
 	  </div>	  
 	</div> 
 	
   <div class="form-group">
-	<div class="col-md-3">  
+	<div class="col-md-4">  
 	   <div class="btn-group">    
 		<button class="btn btn-lg btn-primary btn-block" type="submit" id="signup">Sign up</button>     
 	  </div> 

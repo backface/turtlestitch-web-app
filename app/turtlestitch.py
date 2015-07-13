@@ -1,4 +1,5 @@
-#!/usr/bin/python 
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 import glob, os, time, random, string
 import stitchcode
@@ -27,6 +28,7 @@ project_www_path = "/media/projects"
 # index
 ###################      
 @app.route('/')
+@app.route('/page')
 def index(db):
 	userinfo = is_logged_in(db)
 	return template('index', userinfo=userinfo)
@@ -40,6 +42,8 @@ def upload(db):
 	xarr = request.POST.getlist("x[]")
 	yarr = request.POST.getlist("y[]")
 	jarr = request.POST.getlist("j[]")
+	data = request.POST.get('project_data')
+	name = request.POST.get('name').decode("utf-8")
 	
 	if len(xarr) == len(yarr) == len(jarr) and len(xarr) > 1:
 		pixels_per_millimeter = 10
@@ -76,13 +80,23 @@ def upload(db):
 			return "ERROR"	
 			
 		userinfo = is_logged_in(db) 
-		print userinfo["id"]
+			
+		if name:
+			title = name
+		else:
+			title = fid
+			
+		if data:
+			f = open("%s/%s.xml" % (upload_abs_path,fid),"w")
+			f.write(data);
+			f.close() 
+			
 		c = db.execute(
-			'insert into designs (id,title,user_id,description) values(?, ?, ?,"")', 
-			(fid,fid,userinfo["id"]))
+			'insert into designs (id, title, user_id, description) values(?, ?, ?,"")', 
+			(fid, title, userinfo["id"]))
 		db.commit()
 			
-		return fid
+		return "OK:%s" % (fid)
 	else:
 		return "ERROR"
     
@@ -198,6 +212,7 @@ def gallery_view(db,gid=0,message=False):
 		item["pes_file"] = "%s.pes" % (gid)
 		item["png_file"] = "%s.png" % (gid)
 		item["svg_file"] = "%s.svg" % (gid)
+		item["snap_file"] = "%s.svg" % (gid)
 		item["url"] =  request.url 
 		item["media_path"] = upload_www_path
 		
@@ -239,9 +254,13 @@ def gallery_view(db,gid=0,message=False):
 		item["exp_file"] = "%s.exp" % (item["id"])
 		item["svg_file"] = "%s.svg" % (item["id"])
 		item["pes_file"] = "%s.pes" % (item["id"])
+		item["snap_file"] = "%s.xml" % (item["id"])
 		item["media_path"] = upload_www_path	
 		item["url"] =  request.url 
 		
+		if not os.path.isfile("%s/%s" % (upload_abs_path, item["snap_file"])):
+			item["snap_file"] = False
+			
 		if not os.path.isfile("%s/%s" % (upload_abs_path, item["exp_file"])):
 			return render_error(db,"File does not exist");
 
@@ -268,7 +287,7 @@ def gallery_edit(db,gid=0):
 		
 	c = db.execute('''select 
 					designs.id, designs.title, designs.description, 
-					users.username 
+					users.username, users.id
 				from designs left outer join users
 				on designs.user_id = users.id 
 				where designs.id = ?''',(gid,))
@@ -282,6 +301,7 @@ def gallery_edit(db,gid=0):
 	item["title"] = row[1]			
 	item["description"] = row[2]
 	item["owner"] = row[3]
+	item["owner_id"] = row[4]
 
 	item["is_owner"] = (row[3] == userinfo["username"])
 	if not item["is_owner"] and not userinfo["is_admin"]:
@@ -296,6 +316,7 @@ def gallery_edit(db,gid=0):
 	
 	return template('gallery/edit', 
 		item=item, userinfo=userinfo,
+		is_admin=is_admin(userinfo),
 		gallery_active="active") 
 
 		
@@ -305,8 +326,9 @@ def gallery_edit(db,gid=0):
 @app.route('/update/<gid>', method='POST')
 def gallery_update(db,gid=0):
 	userinfo = is_logged_in(db)
-	submitted_title = request.forms.get('title')
-	submitted_description = request.forms.get('description')
+	submitted_title = request.forms.get('title').decode("utf-8")
+	submitted_description = strip_tags(request.forms.get('description')).decode("utf-8")
+	submitted_owner_id = request.forms.get('owner_id')
 
 	c = db.execute('select user_id from designs where id = ?', (gid,))
 	row = c.fetchone()
@@ -314,11 +336,16 @@ def gallery_update(db,gid=0):
 	if not row:
 		return render_error(db,"File does not exist");
 
-	if row[0] != userinfo["id"] and not userinfo["is_admin"]:
+	if row[0] != userinfo["id"] and not is_admin(userinfo):
 		return render_error(db,"Not allowed");
+	
+	if is_admin(userinfo):
+		c = db.execute('update designs set title = ?, description = ?, user_id = ? where id = ?', 
+				(submitted_title, submitted_description, submitted_owner_id, gid ))
 		
-	c = db.execute('update designs set title = ?, description = ? where id = ?', 
-			(submitted_title, submitted_description, gid))
+	else:
+		c = db.execute('update designs set title = ?, description = ? where id = ?', 
+				(submitted_title, submitted_description, gid))
 	db.commit()
 	message = "Your item was changed."	
 
@@ -350,10 +377,15 @@ def gallery_delete(db,gid=0):
 			return render_error(db,"NOT ALLOWED")
 
 
+###################        
+# gallery import stuff
+###################    
 
 @app.route('/gallery/import')
 def gallery_import(db):
 	userinfo = is_logged_in(db)
+	if not is_admin(userinfo):
+		render_error("not allowed");
 
 	# list files
 	images = glob.glob("%s/*.png" % upload_abs_path);	
@@ -365,7 +397,6 @@ def gallery_import(db):
 	for r in rows:
 		ids.append(r[0])
 		
-	print ids
 	# now go trough the file list
 	items = []
 	images.sort(reverse=True);
@@ -393,6 +424,32 @@ def gallery_import(db):
 		gallery_active="active")   
 		
 
+@app.route('/import/<gid>')
+def gallery_import(db,gid):
+	userinfo = is_logged_in(db)
+	if not is_admin(userinfo):
+		render_error("not allowed");
+			
+	c = db.execute(
+		'insert into designs (id, title, user_id, description) values(?, ?, ?,"")', 
+		(gid, gid, userinfo["id"],))
+	db.commit()	
+
+	redirect("/edit/"+gid) 
+	
+@app.route('/deletefiles/<gid>')
+def gallery_deletefiles(db,gid=0):
+	userinfo = is_logged_in(db)
+	if not is_admin(userinfo):
+		return render_error(db,"NOT ALLOWED")
+	
+	files = glob.glob("%s/%s.*" % (upload_abs_path,gid));
+	for f in files:
+		os.unlink(f)
+	
+	redirect("/gallery/import")
+	
+			
 ###################            
 # PAGES
 ###################    
@@ -454,7 +511,7 @@ def cloud_signup(db):
 
 
 @app.route('/cloudloggedin')  
-def cloud_logout(db):
+def cloud_isloggedin(db):
     session_id = request.get_cookie('session_id')    
     if not session_id: return "FALSE"
     c = db.execute('select user_id from sessions where session_id = ?', (session_id,))
@@ -462,7 +519,7 @@ def cloud_logout(db):
     if row:
         c = db.execute('select username from users where id = ?', (row[0],))
         row = c.fetchone()
-        return row[0]
+        return "OK:"+row[0]
     else:
         return "FALSE" 
    
@@ -580,18 +637,129 @@ def do_logout(db):
 
 
 ###################           
+# PAGES
+###################  
+
+@app.route('/page/create')
+def page_new(db):
+	userinfo = is_logged_in(db) 
+	if not is_admin(userinfo):
+		return render_error(db,"NOT ALLOWED")
+	else:
+		return template('page/edit',
+			userinfo = userinfo,
+			new_page=True,
+			title="",
+			slug="",
+			content="",
+			username="", 
+			message="")
+			
+@app.route('/page/create',method="POST")
+def page_create(db):
+	return page_update(db,True)
+
+@app.route('/page/edit/<slug>')
+def page_edit(db,slug=""):
+	userinfo = is_logged_in(db)
+	if not is_admin(userinfo):
+		return render_error(db,"NOT ALLOWED")
+			
+	c = db.execute('select title, content, slug from pages where slug = ?', (slug,))
+	row = c.fetchone()
+	
+	if row:
+		return template('page/edit',
+		userinfo =userinfo,
+		title=row[0],
+		content=row[1],
+		slug=row[2],
+		new_page=False,
+		message="")		
+	else:
+		return render_error("Page not found")   
+		
+@app.route('/page/update',method="POST")
+def page_update(db,new_page=False):
+	userinfo = is_logged_in(db) 
+	if not is_admin(userinfo):
+		return render_error(db,"NOT ALLOWED")
+	else:
+		import re
+		submitted_title = request.forms.get('title').decode("utf-8")
+		submitted_content = request.forms.get('content').decode("utf-8")
+		submitted_slug = request.forms.get('slug')
+		
+		message = []
+		error = False	
+
+	
+		if len(submitted_title) < 1 or submitted_title==None:
+			error = True
+			message.append("Title is required")			
+	
+		print submitted_title;
+		if not error:
+			if submitted_slug == "" or submitted_slug== None:
+				slug = re.sub(r"[^a-zA-Z0-9\n\.]", "_", submitted_title)
+			else:		
+				slug = re.sub(r"[^a-zA-Z0-9\n\.]", "_", submitted_slug)	
+			
+			if not new_page:			
+				c = db.execute('update pages set title=?, slug=?, content=? where slug=?', 
+					(submitted_title, slug, submitted_content.decode("utf-8"), slug))
+			else:				
+				c = db.execute('insert into pages (title,slug, content) values (?, ?, ?)', 
+					(submitted_title, slug, submitted_content.decode("utf-8")))			
+
+			return template('page/view',
+				userinfo = userinfo,
+				new_page=new_page,
+				pagetitle=submitted_title,
+				content=submitted_content,
+				message="page updated.",
+				message_header="Success")		
+		else:
+			return template('page/view',
+				userinfo = userinfo,
+				new_page=new_page,
+				pagetitle="error",
+				slug=slug,
+				content=submitted_content,
+				username="", 
+				message=message)		
+
+@app.route('/page/<slug>')
+def page_view(db,slug=""):
+	userinfo = is_logged_in(db)
+	c = db.execute('select title, content from pages where slug = ?', (slug,))
+	row = c.fetchone()
+	
+	if row:		
+		return template('page/view',
+		userinfo=userinfo,
+		pagetitle=row[0],
+		content=row[1],
+		message="")		
+	else:
+		return render_error(db,"Page not found")   
+
+
+###################           
 # USER Signup and management
 ###################  
 
 
 @app.route('/signup')
 def signup(db):
+	userinfo = is_logged_in(db)
 	return template('user/signup',
 		userinfo = False,
 		username="", message="", email="", link="")	
             
 @app.route('/signup',method="POST")
 def do_signup(db):
+	userinfo = is_logged_in(db)
 	submitted_username = request.forms.get('username')
 	submitted_link = request.forms.get('link')
 	submitted_email = request.forms.get('email')
@@ -604,6 +772,12 @@ def do_signup(db):
 	if len(submitted_username) < 1:
 		error = True
 		message.append("Username is required")
+	else:	
+		c = db.execute('select id, password from users where username = "%s"' % (submitted_username))
+		row = c.fetchone()
+		if row:
+			error = True
+			message.append("Username exists.")				
 		
 	if len(submitted_username) < 3 or len(submitted_username) > 15:
 		error = True
@@ -613,6 +787,13 @@ def do_signup(db):
 		error = True
 		message.append("E-Mail is required")
 		
+	else:
+		c = db.execute('select id from users where email = "%s"' % (submitted_email))
+		row = c.fetchone()
+		if row:
+			error = True
+			message.append("E-Mail already registered")			
+		
 	if len(submitted_password) < 1:
 		error = True
 		message.append("A Password is required")
@@ -621,17 +802,6 @@ def do_signup(db):
 		error = True
 		message.append("Passwords do not match")
 		
-	c = db.execute('select id, password from users where username = "%s"' % (submitted_username))
-	row = c.fetchone()
-	if row:
-		error = True
-		message.append("Username exists.")		
-	else:
-		c = db.execute('select id from users where email = "%s"' % (submitted_email))
-		row = c.fetchone()
-		if row:
-			error = True
-			message.append("E-Mail already registered")	
 				
 	if not error:	
 		password = crypt.crypt(submitted_password,salt)
@@ -640,8 +810,8 @@ def do_signup(db):
 		redirect("/login")
 		
 	else:
-		
 		return template('user/signup', 
+			userinfo=userinfo,
 			username=submitted_username, 
 			message=message, 
 			link=submitted_link,
@@ -656,9 +826,14 @@ def profile_my(db):
 def profile_show(db,username=""):
 	userinfo = is_logged_in(db)
 	is_me = False
+	
 	if username == "":
 		if userinfo:
 			username = userinfo["username"]
+			is_me = True
+			
+	if userinfo:
+		if username == userinfo["username"]:
 			is_me = True
 
 	c = db.execute('''select 
@@ -666,6 +841,8 @@ def profile_show(db,username=""):
 		from users 
 			where username = "%s"''' % (username))
 	row  = c.fetchone()
+	
+
 	
 	if not row:
 		return render_error(db,"unknown user")
@@ -681,7 +858,7 @@ def profile_show(db,username=""):
 			order by designs.timestamp desc
 			''',(username,))
 		rows = c.fetchall()
-		
+		print rows
 		items = []
 		for row in rows:
 			item = {}
@@ -698,6 +875,7 @@ def profile_show(db,username=""):
 			item["media_path"] = upload_www_path
 			items.append(item)
 	
+		print items
 		return template('user/profile',
 			items=items, 
 			userinfo=userinfo, 
@@ -715,23 +893,35 @@ def profile_show(db,username=""):
 @app.route('/edit_profile')
 def profile_edit(db):
 	userinfo = is_logged_in(db)
+	if not userinfo:
+		return render_error(db,"Not logged in")
 	
 	c = db.execute('''select 
 			email, link, fullname, description  
 		from users where username = "%s"'''
 		 % (userinfo["username"]))
+		 
 	(email,link,fullname, description) = c.fetchone()	
-	
+
+	if description == None:
+		description = ""
+		
 	return template('user/edit_profile',
 		userinfo=userinfo, 
+		description= description,
 		message="", 
 		email=email, link=link)	
             
 @app.route('/edit_profile',method="POST")
 def profile_update(db):
 	userinfo = is_logged_in(db)
+	if not userinfo:
+		return render_error(db,"Not logged in")
+	is_me = True
 	submitted_link = request.forms.get('link')
 	submitted_email = request.forms.get('email')
+	submitted_fullname = request.forms.get('fullname').decode("utf-8")
+	submitted_description = request.forms.get('description').decode("utf-8")
 
 	message = []
 	error = False
@@ -745,20 +935,24 @@ def profile_update(db):
 		message.append("E-Mail too long")
 				
 	if not error:	
-		c = db.execute('update users set email=?, link=? where username =?',
-			(submitted_email, submitted_link, userinfo["username"]))
-		message = "Your profile was updated";
+		c = db.execute('update users set email=?, link=?, description=? where username =?',
+			(submitted_email, 
+			submitted_link, 
+			submitted_description.decode('utf8'), 
+			userinfo["username"]))
+			
+		message = "Your profile was updated"
 		gravatar_url = get_gravatar_url(submitted_email)
-		return template('user/profile',
-			username=userinfo["username"],
-			userinfo=userinfo, gravatar_url=gravatar_url,
-			message=message, message_header="Success")
+		
+		redirect("/profile/"+userinfo["username"])
 		
 	else:		
 		return template('user/edit_profile', 
 			userinfo=userinfo,
 			message=message, 
 			link=submitted_link,
+			description=submitted_description,
+			fullname = submitted_fullname,
 			email=submitted_email)
 
 
@@ -766,13 +960,14 @@ def profile_update(db):
 def password_change(db):
 	userinfo = is_logged_in(db)
 	if not userinfo:
-		redirect("/")
+		return render_error(db,"Not logged in")
 	return template('user/change_password', userinfo=userinfo, message="", email="", link="")	
             
 @app.route('/change_password',method="POST")
 def password_update(db):
 	userinfo = is_logged_in(db)
-	
+	if not userinfo:
+		return render_error(db,"Not logged in")	
 	submitted_old_password = request.forms.get('old_password')
 	submitted_password = request.forms.get('password')
 	submitted_confirm_password = request.forms.get('confirm_password')	
@@ -848,6 +1043,25 @@ def get_gravatar_url(email,size=24):
 	#gravatar_url += urllib.urlencode({'d':default, 's':str(size)})	
 	gravatar_url += urllib.urlencode({'s':str(size)})	
 	return gravatar_url
+	
+	
+from HTMLParser import HTMLParser
+
+class MLStripper(HTMLParser):
+    def __init__(self):
+        self.reset()
+        self.strict = False
+        self.convert_charrefs= True
+        self.fed = []
+    def handle_data(self, d):
+        self.fed.append(d)
+    def get_data(self):
+        return ''.join(self.fed)
+
+def strip_tags(html):
+    s = MLStripper()
+    s.feed(html)
+    return s.get_data()	
 
 ###################################################
 # deployment 

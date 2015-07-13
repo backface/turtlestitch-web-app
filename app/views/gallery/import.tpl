@@ -14,7 +14,7 @@
 			
 			% if is_admin:
 			<a href="/import/{{item['id']}}"><span class="glyphicon glyphicon-edit"></span>import</a><br />	
-			<a href="/delete/{{item['id']}}"><span class="glyphicon glyphicon-remove"></span>delete</a><br />	
+			<a href="/deletefiles/{{item['id']}}"><span class="glyphicon glyphicon-remove"></span>delete</a><br />	
 			% end
 		
 		</div>

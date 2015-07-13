@@ -9,19 +9,20 @@
 			<img class="img-responsive pull-right bmargin" src="{{item['media_path']}}/{{item['png_file']}}" />
 		</div>
 		<div class="col-md-5">
-			<form id="profilmeFor" class="form-vertical" method="post" action="/update/{{item["id"]}}">				
-				<div class="form-group has-feedback">
+
+			<form id="profilmeFor" enctype="multipart/form-data" class="form-vertical" method="post" action="/update/{{item["id"]}}">				
+			<div class="form-group hase-feedback">
 				  <label for="title" class="control-label">Title:</label>
 				  <div class="input-group">
-					<input type="text" required autofocus class="form-control  col-md-5" name="title" id="title" placeholder="{{item['title']}}" value="{{item['title']}}"/>
+					<input type="text" required autofocus class="form-control" name="title" id="title" value="{{item['title']}}"/>
 					<span class="glyphicion sform-control-feedback"></span>
 				  </div>
-				</div>	 	  
+				</div>	  				 	  
 				 
 				<div class="form-group has-feedback">
 				  <label for="description" class="control-label">Description:</label>
 				  <div class="input-group">
-					<textarea cols="25" rows="5" name="description" id="description">{{item['description']}}</textarea>
+					<textarea cols="40" rows="10" name="description" id="description">{{item['description']}}</textarea>
 				  </div>
 				</div>	 
 				
@@ -30,8 +31,20 @@
 					<button class="btn btn-lg btn-primary btn-block" type="submit" id="update">Update</button>     
 				  </div> 
 				</div>
+				
+			% if is_admin:
+				<hr />
+				<h4>admin functions</h4>
+				<div class="form-group has-feedback">
+				  <label for="owner_id" class="control-label">Owner ID:</label>
+				  <div class="input-group">
+					<input type="number" class="form-control" name="owner_id" id="owner_id" min=0 value="{{item['owner_id']}}"/>
+				  </div>
+				</div>	 				
+			% end 
+			
 			</form>
-
+				
 			<script>
 				$(document).ready(function() {
 					$("input").keyup(function () {

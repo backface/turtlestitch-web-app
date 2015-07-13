@@ -30,7 +30,7 @@
         </div>
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-            <li class="{{get('about_active', '')}}"><a href="/about">About</a></li>
+            <li class="{{get('about_active', '')}}"><a href="/page/about">About</a></li>
             <li class="{{get('gallery_active', '')}}"><a href="/gallery">Gallery</a></li>
             <li class="{{get('run_active', '')}}"><a href="/run">Run</a></li>
             <li><a href="http://www.stitchcode.com/category/turtlestitch/">Blog</a></li>            
@@ -44,7 +44,7 @@
 				<li><a href="/signup">Sign Up</a></li>	
 				<li><a href="/login">Log In</a></li>			
 			%end
-			<li class="{{get('contact_active', '')}}"><a href="/contact">Contact</a></li>
+			<li class="{{get('contact_active', '')}}"><a href="/page/contact">Contact</a></li>
           </ul>
         </div>
       </div>

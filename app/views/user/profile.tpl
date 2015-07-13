@@ -14,7 +14,7 @@
 
 <div class="container">
 	<div class="row">
-		<div class="col-md-4"><h3><img class="pull-right bargmin" src="{{gravatar_large}}" /></h3></div>
+		<div class="col-md-5"><h3><img class="pull-right bargmin" src="{{gravatar_large}}" /></h3></div>
 		<div class="col-md-4">
 			<h3>{{username}} 
 			% if fullname: 
@@ -26,7 +26,7 @@
 	
 	% if is_me:
 		<div class="row">
-			<div class="col-md-4"></div>
+			<div class="col-md-5"></div>
 			<div class="col-md-4">
 				<p>
 				<a href="/edit_profile"><span class="glyphicon glyphicon-edit"></span> Edit Profile</a><br />
@@ -37,23 +37,32 @@
 	% end
 
 	<div class="row">
-		<div class="col-md-4"></div>
+		<div class="col-md-5"></div>
 		<div class="col-md-4">
-			% if link: 
+			% if link != None: 
 				<p><a href="{{link}}">{{link}}</a></p>
 			% end
 			
-			% if description: 
-				<p>{{link}}</p>
+			% if description != None:
+			<p>
+			% for l in description.split("\n"):
+				{{l}}<br />
 			% end
+			</p>
+			% end
+			
+			% if description == None and link == None:
+			<p>&nbsp;</p>
+			% end
+			
 		</div>
 	</div>	
 </div>
 
 
 % closed = False
-<div class="container">
 
+<div class="container">
 	% i = 0
 	% for item in items:
 		% if i % 4 == 0:

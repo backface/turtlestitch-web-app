@@ -48,7 +48,8 @@ Projekt Lead: <a href="mailto:amsjuxx.eu">Andrea Mayr-Stalder</a><br />
 Lead Developer: <a href="http://m.ash.to/">Michael Aschauer</a><br />
 With financial support of: <a href="http://www.netidee.at">netidee.at</a>
 </p>
-<p><a href="http://www.netidee.at"><img src="media/img/netidee.jpg" /></p>
+<p><a href="http://www.netidee.at"><img src="media/img/netidee.jpg" /></a>
+</p>
     </div>
 	<div class="col-sm-3">&nbsp;</div>
   </div>

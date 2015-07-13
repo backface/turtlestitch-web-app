@@ -21,14 +21,26 @@
 			<img class="img-responsive pull-right bmargin" src="{{item['media_path']}}/{{item['png_file']}}" />
 			
 		</div>
-		<div class="col-md-3">
-			<h3>{{item['title']}}</h3>
+		<div class="col-md-4">
+			<h2>{{item['title']}}</h2>
+			<p>by <a href="/profile/{{item['owner']}}">{{item['owner']}}</a></p>
 			
-			% if item['description']:
-			<p>{{item['description']}}</p>
+			% if item['description'] != "None":
+			<p>
+			% for l in item['description'].split("\n"):
+				{{l}}<br />
 			% end
+			</p>
+						
 			
-			<p>Owner: <a href="/profile/{{item['owner']}}">{{item['owner']}}</a></p>
+
+
+			% if item['snap_file']:
+			<p class="dlink">
+				<span class="glyphicon glyphicon-edit" aria-hidden="true"></span> 
+				<a href="/run/index.html#open:..{{item['media_path']}}/{{item['snap_file']}}">Open in TurtleStitch</a><br />
+			</p>	
+			% end		
 
 			
 			<h4>Download as image file</h4>
@@ -37,7 +49,6 @@
 				<a href="{{item['media_path']}}/{{item['png_file']}}">{{item['png_file']}}</a><br />
 				<span class="glyphicon glyphicon-download" aria-hidden="true"></span> 
 				<a href="{{item['media_path']}}/{{item['svg_file']}}">{{item['svg_file']}}</a><br />
-				<br />
 			</p>
 		
 			
@@ -45,7 +56,17 @@
 			<p class="dlink">
 			<span class="glyphicon glyphicon-download" aria-hidden="true"></span> 
 				<a href="{{item['media_path']}}/{{item['exp_file']}}">{{item['exp_file']}}</a><br />
+				
 			</p>
+			
+			% if item['snap_file']:
+			<h4>Download as snap project file</h4>
+			<p class="dlink">
+				<span class="glyphicon glyphicon-download" aria-hidden="true"></span> 
+				<a href="{{item['media_path']}}/{{item['snap_file']}}">{{item['snap_file']}}</a><br />
+				
+			</p>	
+			% end	
 			
 			<div class="spacer">&nbsp;</div>
 			
