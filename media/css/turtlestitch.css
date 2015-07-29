@@ -1,0 +1,27 @@
+
+/* Main marketing message and sign up button */
+
+body {
+	padding-top: 70px;
+}
+
+/*a {color:green;}*/
+/*.row a {text-decoration:underline}*/
+p {margin-bottom:20px}
+h3 {margin-top:30px}
+
+/* bootstrap overrides */
+.jumbotron {
+  background-color: transparent;
+}
+
+/*.navbar-nav > li > a  {padding: 10px 15px;}*/
+.navbar-brand { padding:7px 15px;height:20px}
+/*.navbar-collapse {padding:0px 15px;margin-top:0px;}*/
+
+/* custom additions */
+
+.spacer {height:20px}
+.cell {padding:10px;}
+.dlink a {text-decoration:underline}
+.bmargin {margin-bottom:30px}
