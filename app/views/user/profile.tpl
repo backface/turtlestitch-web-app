@@ -71,7 +71,7 @@
 		% end
 		<div class="col-sm-3 text-center cell">
 			<h5>{{item['title']}}</h5><br />
-			<a href="/view/{{item['id']}}"><img class="img-responsive center-block" src="/media/uploads/{{item['png_file']}}" /></a>
+			<a href="/view/{{item['id']}}"><img class="img-responsive center-block" src="{{item['media_path']}}/{{item['png_file']}}" /></a>
 			
 			% if is_admin or item['is_owner']:
 			<a href="/edit/{{item['id']}}"><span class="glyphicon glyphicon-edit"></span> edit</a><br />

@@ -105,5 +105,26 @@
 		
 		<div class="col-md-1"></div>
 	</div>
-
+	% if item["images"]:
+		<div class="row">
+			<div class="col-md-1"></div>
+			<div class="col-md-10 text-center">
+			<center>
+			<legend>more images</legend>
+			
+			% for img in item["images"]:
+				<div style="float:left; padding:10px">
+					<a href="{{img['src']}}">
+						<img src="{{img['src']}}" height="150" />
+					</a><br />
+					% if is_admin or item['is_owner']:
+					<a href="/deleteimg/{{img['id']}}"><span class="glyphicon glyphicon-remove"></span> delete</a>		
+					% end
+				</div>
+			% end
+			</center>
+			</div>
+			
+		</div>
+	% end
 </div>

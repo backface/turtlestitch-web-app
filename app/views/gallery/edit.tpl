@@ -22,26 +22,33 @@
 				<div class="form-group has-feedback">
 				  <label for="description" class="control-label">Description:</label>
 				  <div class="input-group">
-					<textarea cols="40" rows="10" name="description" id="description">{{item['description']}}</textarea>
+					<textarea cols="40" rows="6" name="description" id="description">{{item['description']}}</textarea>
 				  </div>
 				</div>	 
 				
-			  <div class="form-group">
-				   <div class="btn-group">    
-					<button class="btn btn-lg btn-primary btn-block" type="submit" id="update">Update</button>     
-				  </div> 
-				</div>
-				
+			
 			% if is_admin:
-				<hr />
-				<h4>admin functions</h4>
+				<div class="spacer"></div>
+				<legend>admin functions</legend>
 				<div class="form-group has-feedback">
 				  <label for="owner_id" class="control-label">Owner ID:</label>
 				  <div class="input-group">
 					<input type="number" class="form-control" name="owner_id" id="owner_id" min=0 value="{{item['owner_id']}}"/>
 				  </div>
-				</div>	 				
+				</div>	 	
+				<div class="form-group has-feedback">
+				  <label for="featured" class="control-label">Featured</label>
+				  <div class="input-group">
+					<input type="checkbox" class="form-control" name="featured" id="featured" value="1" {{item['featured']}}/>
+				  </div>
+				</div>	 			
 			% end 
+			
+			  <div class="form-group">
+				   <div class="btn-group">    
+					<button class="btn btn-lg btn-primary btn-block" type="submit" id="update">Update</button>     
+				  </div> 
+				</div>			
 			
 			</form>
 				
@@ -58,8 +65,27 @@
 				});
 			});		
 			</script>
+			<div class="spacer"></div>
+			
+			<form enctype="multipart/form-data" action="/img_upload" method="POST" >
+				<fieldset>
+					<legend>Upload Images</legend>
+					<div class="form-group">
+						<label for="image_file">Choose a file to upload:</label>
+						<input type="hidden" id="gid" name="gid" value="{{item["id"]}}" />
+						<input name="image_file" id="image_file"  type="file" accept="image/gif, image/jpeg, image/png" /><br />
+					</div>	
+				</fieldset>
+					<div class="form-group">
+					   <div class="btn-group">    
+						<button class="btn btn-lg btn-primary btn-block" type="submit" id="update">Upload</button>     
+					  </div> 
+					</div>				
+				
+			</form>		
 		</div>
-		<div class="col-md-1"></div>
+		
+		
 	</div>		
 
 </div>

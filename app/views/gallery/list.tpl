@@ -5,19 +5,39 @@
 
 	
 	<div class="row">&nbsp;
+	
+  
+	
 	%if pages > 1:	
-    <ul class="pagination  pull-right">
-		<li><a href="/gallery">&laquo;</a></li>
-    % for cp in range(0,pages):
-        %if page == cp+1:
-			<li class="active"><span>{{cp+1}}</span></li>
-		% else:
-        <li><a href="/gallery/page/{{cp+1}}">{{cp+1}}</a></li>
-		% end
-    % end
-		<li><a href="/gallery/page/{{pages}}">&raquo;</a></li>
+    <ul class="pagination  pull-right" style="padding-left:20px">
+			<li><a href="{{page_link}}/page/1">&laquo;</a></li>
+			% for cp in range(0,pages):
+				%if page == cp+1:
+					<li class="active"><span>{{cp+1}}</span></li>
+				% else:
+				<li><a href="{{page_link}}/page/{{cp+1}}">{{cp+1}}</a></li>
+				% end
+			% end
+				<li><a href="{{page_link}}/page/{{pages}}">&raquo;</a></li>
     </ul>
 	% end    
+
+    <ul class="pagination  pull-right">
+		%if featured:		
+			<li class="active"><a href="/gallery/featured">featured</a></li>
+			<li><a href="/gallery/textile">textile</a></li>
+			<li><a href="/gallery/all">all</a></li>
+		%elif textile:		
+			<li><a href="/gallery/featured">featured</a></li>
+			<li class="active"><a href="/gallery/textile">textile</a></li>
+			<li><a href="/gallery/all">all</a></li>
+		% else:
+			<li><a href="/gallery/featured">featured</a></li>
+			<li><a href="/gallery/textile">textile</a></li>
+			<li class="active"><a href="/gallery">all</a></li>	
+		% end
+	</ul>
+
 	</div>
 	
 
@@ -29,7 +49,7 @@
 		% end
 		<div class="col-sm-3 text-center cell">
 			<h5>{{item['title']}}</h5><br />
-			<a href="/view/{{item['id']}}"><img class="img-responsive center-block" src="/media/uploads/{{item['png_file']}}" /></a>
+			<a href="/view/{{item['id']}}"><img class="img-responsive center-block" src="{{item['media_path']}}/{{item['png_file']}}" /></a>
 			
 			% if is_admin or item['is_owner']:
 			<a href="/edit/{{item['id']}}"><span class="glyphicon glyphicon-edit"></span> edit</a><br />

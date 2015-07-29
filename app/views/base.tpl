@@ -5,10 +5,21 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<title>TurtleStitch {{title or '!'}}</title>
+	
 	<link rel="shortcut icon" href="/media/img/favicon-32x32.png" type="image/png">	
+	<link rel="image_src" href="http://www.turtlestitch.org/media/img/turtlestitch_logo.png" / >
+	<meta name="description" content="TurtleStitch is based on a browser-based 
+	educational programming language (Snap!) to generate patterns for embroidery 
+	machines. It is easy to use, requiring no prior knowledge in programming, 
+	yet powerful in creating nowels patterns for embroidery. It is usefull 
+	for designers to experiment with generative aesthetics and precision
+	 embroidery as well as tool for innovative workshops combining an 
+	 introduction to programing with haptic output. " />
+	
 	<link href="/media/css/bootstrap.min.css" rel="stylesheet" />
 	<link href="/media/css/font-awesome.min.css" rel="stylesheet" />
 	<link href="/media/css/turtlestitch.css" rel="stylesheet" />
+	
 	<script src="/media/js/jquery.min.js"></script>
 	<script src="/media/js/bootstrap.min.js"></script>
 </head>
@@ -38,7 +49,7 @@
           </ul>
           <ul class="nav navbar-nav navbar-right">			  
 			%if userinfo: 
-				<li><a style="padding-right:0px;padding-bottom:0px;" href="/profile"><img src="{{userinfo['gravatar_url']}}" /></a></li>
+				<li><a style="padding-right:0px;padding-bottom:0px;" href="/profile"><img src="{{userinfo['gravatar_url']}}" height="24" width="24" /></a></li>
 				<li><a href="/logout">Log Out</a></li>
 			% else:
 				<li><a href="/signup">Sign Up</a></li>	

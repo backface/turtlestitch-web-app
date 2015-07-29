@@ -69,8 +69,8 @@ def upload(db):
 			ly = y
 			
 		emb.translate_to_origin()	
-		emb.flatten()
 		emb.scale(27.80/pixels_per_millimeter)
+		emb.flatten()
 		emb.add_endstitches_to_jumps(10)
 		emb.save_as_exp("%s/%s.exp" % (upload_abs_path,fid) )	
 		x,y = emb.getSize()
@@ -81,6 +81,10 @@ def upload(db):
 			return "ERROR"	
 			
 		userinfo = is_logged_in(db) 
+		if not userinfo:
+			userid=0
+		else:
+			userid=userinfo["id"]
 			
 		if name:
 			title = name
@@ -94,7 +98,7 @@ def upload(db):
 			
 		c = db.execute(
 			'insert into designs (id, title, user_id, description) values(?, ?, ?,"")', 
-			(fid, title, userinfo["id"]))
+			(fid, title, userid))
 		db.commit()
 			
 		return "OK:%s" % (fid)
@@ -103,97 +107,105 @@ def upload(db):
     
 ###################        
 # gallery overview
-###################    
-@app.route('/gallery')
-@app.route('/gallery/page/<page>')
-def gallery_list(db,page=1):
-	userinfo = is_logged_in(db)
-	
-	source="db"
-	if source == "files":
-		# list files
-		images = glob.glob("%s/*.png" % upload_abs_path);	
+###################   
 
-		#pagination stuff
-		img_per_page = 20;
-		page = int(page)
-		if page <= 0:
-			page = 1
-		num_files = len(images)
-		num_pages = len(images) / float(img_per_page)
-		if num_pages > int(num_pages):
-			num_pages = int(num_pages+1)
-		else:
-			num_pages = int(num_pages);
-		start = (int(page)-1) * img_per_page
-		stop = start + img_per_page -1
-		
-		# now go trough the file list
-		items = []
-		images.sort(reverse=True);
-		i = 0
-		for image in images:
-			part = image.split("/")
-			name = part[-1]
-			item = {}
-			item["id"] = part[-1][:-4]
-			item["image"] = image
-			item["file"] = part[-1]
-			item["png_file"] = "%s.png" % (item["id"])
-			item["exp_file"] = "%s.exp" % (item["id"])
-			item["media_path"] = upload_www_path
-			if i >= start and i <= stop:
-				items.append(item)
-			i += 1
+
+@app.route('/gallery')
+@app.route('/gallery/featured')
+@app.route('/gallery/featured/page/<page>') 
+def gallery_featured(db,page=1):
+	return gallery_list(db,page,featured=True)
 	
-	if source == "db":
-		c = db.execute('''select 
-				designs.id, designs.title, designs.description, 
-				users.username 
-			from designs left outer join users
-			on designs.user_id = users.id
-			order by designs.timestamp desc''')
-		rows = c.fetchall()
-		
-		#pagination stuff
-		img_per_page = 20;
-		page = int(page)
-		if page <= 0:
-			page = 1
-		num_files = len(rows)
-		num_pages = len(rows) / float(img_per_page)
-		if num_pages > int(num_pages):
-			num_pages = int(num_pages+1)
+@app.route('/gallery/all')
+def gallery_all(db):
+	return gallery_list(db,page=1,featured=False)	
+	
+@app.route('/gallery/textile')
+@app.route('/gallery/textile/page/<page>')
+def gallery_textile(db,page=1):
+	return gallery_list(db,page,featured=False,textile=True)		
+
+@app.route('/gallery/page/<page>')
+def gallery_list(db,page=1,featured=False,textile=False):
+	userinfo = is_logged_in(db)
+
+	page_link = "/gallery"
+	query = '''select 
+			designs.id, designs.title, designs.description, 
+			users.username 
+		from designs left outer join users
+		on designs.user_id = users.id
+		order by designs.timestamp desc'''
+	if featured:
+		page_link = "/gallery/featured"
+		query = '''select 
+			designs.id, designs.title, designs.description, 
+			users.username 
+		from designs 
+		left outer join users
+		on designs.user_id = users.id where designs.featured = 1 
+		order by designs.timestamp desc'''
+	if textile:
+		page_link = "/gallery/textile"
+		query = '''select 
+				designs.id, designs.title, designs.description, users.username,
+				designs_images.name 
+			from designs 
+			left join users on designs.user_id=users.id 
+			left join designs_images on designs_images.design_id=designs.id 
+			where  designs_images.name != ""
+			order by designs.timestamp desc'''
+	c = db.execute(query)
+	rows = c.fetchall()
+	
+	#pagination stuff
+	img_per_page = 20;
+	page = int(page)
+	if page <= 0:
+		page = 1
+	num_files = len(rows)
+	num_pages = len(rows) / float(img_per_page)
+	if num_pages > int(num_pages):
+		num_pages = int(num_pages+1)
+	else:
+		num_pages = int(num_pages);
+	start = (int(page)-1) * img_per_page
+	stop = start + img_per_page -1
+	
+	# now go trough the list
+	items = []
+	i = 0
+	for row in rows:
+		item = {}
+		item["id"] = row[0]
+		item["title"] = row[1]			
+		item["description"] = row[2]
+		item["owner"] = row[3]
+		if userinfo:
+			item["is_owner"] = (row[3] == userinfo["username"])
 		else:
-			num_pages = int(num_pages);
-		start = (int(page)-1) * img_per_page
-		stop = start + img_per_page -1
+			item["is_owner"] = False	
+		item["png_file"] = "%s.png" % (row[0])
 		
-		# now go trough the list
-		items = []
-		i = 0
-		for row in rows:
-			item = {}
-			item["id"] = row[0]
-			item["title"] = row[1]			
-			item["description"] = row[2]
-			item["owner"] = row[3]
-			if userinfo:
-				item["is_owner"] = (row[3] == userinfo["username"])
-			else:
-				item["is_owner"] = False	
-			item["png_file"] = "%s.png" % (row[0])
-			item["exp_file"] = "%s.exp" % (row[0])
-			item["media_path"] = upload_www_path
-			if i >= start and i <= stop:
-				items.append(item)
-			i += 1		
+		if textile:
+			item["png_file"] = "%s/%s/%s" % ("images",row[0],row[4])
+			
+		item["exp_file"] = "%s.exp" % (row[0])
+		item["media_path"] = upload_www_path
+		if i >= start and i <= stop:
+			items.append(item)
+		i += 1		
 	
 	return template('gallery/list',
 		items=items, userinfo=userinfo, page=page, pages=num_pages,
 		total=num_files, 
+		featured=featured,
+		page_link=page_link,
+		textile=textile,
 		is_admin = is_admin(userinfo),
 		gallery_active="active")    
+
+
 
 ###################        
 # gallery detail
@@ -271,11 +283,27 @@ def gallery_view(db,gid=0,message=False):
 			emb.scale(1.0)
 			emb.save_as_svg("%s/%s" % (upload_abs_path, item["svg_file"]))		
 
+		c = db.execute('''select id, name from designs_images whe
+							where design_id = ?''',(gid,))
+		row = c.fetchall()
+		if row:
+			item["images"] = []
+			for r in row:
+				img = {}
+				img["id"]= r[0]
+				img["name"]= r[1]
+				img["src"] = "%s/images/%s/%s" % (upload_www_path, gid, r[1]) 
+				item["images"].append(img)
+		
+		else:
+			item["images"] = False
+			
 		return template('gallery/view', 
 			item=item, userinfo=userinfo,
 			message=message,
 			is_admin = is_admin(userinfo),
-			gallery_active="active") 			
+			gallery_active="active") 	
+					
 		
 ###################        
 # gallery edit
@@ -288,7 +316,7 @@ def gallery_edit(db,gid=0):
 		
 	c = db.execute('''select 
 					designs.id, designs.title, designs.description, 
-					users.username, users.id
+					users.username, users.id, designs.featured
 				from designs left outer join users
 				on designs.user_id = users.id 
 				where designs.id = ?''',(gid,))
@@ -303,7 +331,11 @@ def gallery_edit(db,gid=0):
 	item["description"] = row[2]
 	item["owner"] = row[3]
 	item["owner_id"] = row[4]
-
+	if row[5]>0:
+		item["featured"] = "checked"
+	else:
+		item["featured"] = ""
+		
 	item["is_owner"] = (row[3] == userinfo["username"])
 	if not item["is_owner"] and not userinfo["is_admin"]:
 		return render_error(db,"NOT ALLOWED");	  
@@ -330,6 +362,9 @@ def gallery_update(db,gid=0):
 	submitted_title = request.forms.get('title').decode("utf-8")
 	submitted_description = strip_tags(request.forms.get('description')).decode("utf-8")
 	submitted_owner_id = request.forms.get('owner_id')
+	submitted_featured = request.forms.get('featured')
+	if submitted_featured == None:
+		submitted_featured = 0
 
 	c = db.execute('select user_id from designs where id = ?', (gid,))
 	row = c.fetchone()
@@ -341,8 +376,8 @@ def gallery_update(db,gid=0):
 		return render_error(db,"Not allowed");
 	
 	if is_admin(userinfo):
-		c = db.execute('update designs set title = ?, description = ?, user_id = ? where id = ?', 
-				(submitted_title, submitted_description, submitted_owner_id, gid ))
+		c = db.execute('update designs set title = ?, description = ?, user_id = ?, featured = ? where id = ?', 
+				(submitted_title, submitted_description, submitted_owner_id, submitted_featured, gid ))
 		
 	else:
 		c = db.execute('update designs set title = ?, description = ? where id = ?', 
@@ -376,6 +411,79 @@ def gallery_delete(db,gid=0):
 			redirect("/gallery")
 		else:
 			return render_error(db,"NOT ALLOWED")
+
+
+###################        
+# gallery image delete
+###################    
+@app.route('/deleteimg/<gid>')
+def gallery_deleteimg(db,gid=0):
+	userinfo = is_logged_in(db)
+	if not userinfo:
+		return render_error(db,"NOT ALLOWED")
+
+	c = db.execute('''select designs_images.design_id, designs_images.name, designs.user_id
+				from designs_images left join designs on designs_images.design_id  = designs.id
+				where designs_images.id = ?''',(gid,))
+	row = c.fetchone()
+	if not row:
+		return render_error(db,"File does not exist");
+	else:
+		if row[0] == userinfo["id"] or userinfo["is_admin"]:
+			
+			c = db.execute('delete from designs_images where id=?',(gid,))
+			db.commit()
+			f = "%s/images/%s/%s" % (upload_abs_path, row[0], row[1]);
+			print f
+			os.unlink(f)
+			redirect("/view/%s" % (row[0]))
+		else:
+			return render_error(db,"NOT ALLOWED")
+
+
+
+###################        
+# gallery import stuff
+###################    
+
+@app.route('/img_upload', method='POST')
+def gallery_img_upload(db):
+	userinfo = is_logged_in(db)
+	if not userinfo:
+		return render_error(db,"NOT ALLOWED")	
+		
+	if 	request.files.get('image_file') == None:
+		return render_error(db,"no file specified")	
+		
+	gid  = request.forms.get('gid')
+	upload  = request.files.get('image_file')
+	name, ext = os.path.splitext(upload.filename)
+	uploaddir = "%s/%s/%s" % (upload_abs_path, "images",gid)
+    	
+	if ext not in ('.png','.jpg','.jpeg'):
+		return 'File extension not allowed.'
+
+	c = db.execute('select * from designs_images where design_id=? and name=?', (gid,upload.filename,))
+	row = c.fetchone()
+	if row:
+		c = db.execute('update designs_images set name=? where design_id=? and name=?', 
+			(upload.filename, gid,upload.filename,))
+		db.commit()	
+	else:
+		c = db.execute('insert into designs_images (design_id, name) values (?, ?)', 
+			(gid,upload.filename,))
+		db.commit()	
+
+	if not os.path.exists(uploaddir):
+		os.makedirs(uploaddir)	
+			
+	upload.save(uploaddir,True) # appends upload.filename automatically
+	
+	message = "Your item was changed."	
+
+	return gallery_view(db,gid,message)
+
+
 
 
 ###################        
@@ -426,7 +534,7 @@ def gallery_import(db):
 		
 
 @app.route('/import/<gid>')
-def gallery_import(db,gid):
+def gallery_do_import(db,gid):
 	userinfo = is_logged_in(db)
 	if not is_admin(userinfo):
 		render_error("not allowed");
@@ -510,7 +618,6 @@ def cloud_signup(db):
 	# TODO cloud signup
 	pass
 
-
 @app.route('/cloudloggedin')  
 def cloud_isloggedin(db):
     session_id = request.get_cookie('session_id')    
@@ -523,8 +630,6 @@ def cloud_isloggedin(db):
         return "OK:"+row[0]
     else:
         return "FALSE" 
-   
-
 
 @app.route('/cloud/get_project', method='GET')  
 def project_get(db):
@@ -756,6 +861,34 @@ def page_view(db,slug=""):
 # USER Signup and management
 ###################  
 
+@app.route('/users')
+def user_list(db):
+	userinfo = is_logged_in(db)
+	if not userinfo:
+		return render_error(db,"Not logged in")
+	
+	c = db.execute('''select 
+			username, email, link, fullname, description  
+		from users order by timestamp''')
+		 
+	rows = c.fetchall();
+	
+	items = []
+	for row in rows:
+		item = {}
+		item["name"] = row[0]
+		item["email"] = row[1]
+		item["link"] = row[2]			
+		item["fullname"] = row[3]
+		item["description"] = row[4]
+		item["gravatar"] = get_gravatar_url(item["email"],96)
+		items.append(item)
+				
+	return template('user/list',
+		userinfo=userinfo, 
+		message="",
+		items=items,
+		is_admin=is_admin(userinfo))
 
 @app.route('/signup')
 def signup(db):
@@ -1022,7 +1155,321 @@ def password_update(db):
 			essage=message,  
 			message_header="Error")
 
+########################################################
+# drawings 
+#########################################################
+## this is a addon not directly connected to turtlestitch
 
+drawing_abs_path = "%s/%s" % (upload_abs_path, "drawings")
+drawing_www_path = "%s/%s" % (upload_www_path, "drawings")
+
+@app.route('/draw')
+def draw(db):
+	userinfo = is_logged_in(db)
+	return template('draw/draw', 
+		draw_active='active',
+		userinfo=userinfo)
+	
+@app.route('/draw/upload',method='post')
+def draw_upload(db):
+	ii = 0
+	points = request.POST.getlist("points[]")
+	types = request.POST.getlist("ptypes[]")
+	name = request.POST.get('name').decode("utf-8")
+	
+	if not os.path.exists(drawing_abs_path):
+		os.makedirs(drawing_abs_path)			
+	
+	if len(points) > 1:
+		pixels_per_millimeter = 10
+		emb = stitchcode.Embroidery()
+		lx = -99999999
+		ly = -99999999
+		fid = str(int(time.time() * 1000))
+		
+		for ppoint in points:		
+			x = float(ppoint.split(",")[0].split(":")[1])
+			y = -float(ppoint.split(",")[1].split(":")[1][:-2])
+			if types[ii] == "true": 
+				jump = True;
+			else:
+				jump = False
+			emb.addStitch(stitchcode.Point(x,y,jump))	
+					
+		emb.translate_to_origin()	
+		emb.scale(27.80/pixels_per_millimeter)
+		emb.flatten()
+		emb.add_endstitches_to_jumps(10)
+		emb.save_as_exp("%s/%s.exp" % (drawing_abs_path,fid) )	
+		x,y = emb.getSize()
+	
+		if x*y < 4000000:
+			emb.save_as_png("%s/%s.png" % (drawing_abs_path,fid), True)
+		else:
+			print "image to big: %dx%d = %d" % (x,y,x*y)
+			return "ERROR"	
+			
+		userinfo = is_logged_in(db) 
+		if not userinfo:
+			userid=0
+		else:
+			userid=userinfo["id"]
+			
+		if name:
+			title = name
+		else:
+			title = fid
+					
+		c = db.execute(
+			'insert into drawings (id, title, user_id, description) values(?, ?, ?,"")', 
+			(fid, title, userid))
+		db.commit()
+			
+		return "OK:%s" % (fid)
+	else:
+		return "ERROR"
+		
+		
+###################        
+# draw view detail
+###################    
+@app.route('/draw/view/<gid>')
+def draw_view(db,gid=0,message=False):
+	userinfo = is_logged_in(db)
+
+	c = db.execute('''select 
+					drawings.id, drawings.title, drawings.description, 
+					users.username 
+				from drawings left outer join users
+				on drawings.user_id = users.id 
+				where drawings.id = ?''',(gid,))
+	row = c.fetchone()
+	if not row:
+		return render_error(db,"File does not exist");	    
+
+	item = {}
+	item["id"] = row[0]
+	item["title"] = row[1]			
+	item["description"] = row[2]
+	item["owner"] = row[3]
+	if userinfo:
+		item["is_owner"] = (row[3] == userinfo["username"])
+	else:
+		item["is_owner"] = False			
+	item["png_file"] = "%s.png" % (item["id"])
+	item["exp_file"] = "%s.exp" % (item["id"])
+	item["svg_file"] = "%s.svg" % (item["id"])
+	item["pes_file"] = "%s.pes" % (item["id"])
+	item["media_path"] = drawing_www_path	
+	item["url"] =  request.url 
+	
+	
+	if not os.path.isfile("%s/%s" % (drawing_abs_path, item["exp_file"])):
+		return render_error(db,"File does not exist");
+
+	if not os.path.isfile("%s/%s" % (drawing_abs_path, item["svg_file"])):
+		emb = stitchcode.Embroidery()
+		emb.import_melco("%s/%s" % (drawing_abs_path, item["exp_file"]))
+		emb.scale(1.0)
+		emb.save_as_svg("%s/%s" % (drawing_abs_path, item["svg_file"]))		
+		
+	return template('draw/view', 
+		item=item, userinfo=userinfo,
+		message=message,
+		is_admin = is_admin(userinfo),
+		gallery_active="active") 	
+							
+
+
+@app.route('/draw/featured')
+@app.route('/draw/featured/<page>')
+def draw_featured(db,page=1,featured=False,textile=False):
+	return draw_list(db,page=page,featured=True,textile=False)
+		
+@app.route('/draw/list')
+@app.route('/draw/all')
+@app.route('/draw/gallery')
+@app.route('/draw/page/<page>')
+def draw_list(db,page=1,featured=False,textile=False):
+	userinfo = is_logged_in(db)
+
+	page_link = "/draw/list/"
+	query = '''select 
+			drawings.id, drawings.title, drawings.description, 
+			users.username 
+		from drawings left outer join users
+		on drawings.user_id = users.id
+		order by drawings.timestamp desc'''
+	if featured:
+		page_link = "/draw/featured"
+		query = '''select 
+			drawings.id, drawings.title, drawings.description, 
+			users.username 
+		from drawings 
+		left outer join users
+		on drawings.user_id = users.id where drawings.featured = 1 
+		order by drawings.timestamp desc'''
+	if textile:
+		page_link = "/draw/textile"
+		query = '''select 
+				designs.id, designs.title, designs.description, users.username,
+				designs_images.name 
+			from designs 
+			left join users on designs.user_id=users.id 
+			left join designs_images on designs_images.design_id=designs.id 
+			where  designs_images.name != ""
+			order by designs.timestamp desc'''
+	c = db.execute(query)
+	rows = c.fetchall()
+	
+	#pagination stuff
+	img_per_page = 20;
+	page = int(page)
+	if page <= 0:
+		page = 1
+	num_files = len(rows)
+	num_pages = len(rows) / float(img_per_page)
+	if num_pages > int(num_pages):
+		num_pages = int(num_pages+1)
+	else:
+		num_pages = int(num_pages);
+	start = (int(page)-1) * img_per_page
+	stop = start + img_per_page -1
+	
+	# now go trough the list
+	items = []
+	i = 0
+	for row in rows:
+		item = {}
+		item["id"] = row[0]
+		item["title"] = row[1]			
+		item["description"] = row[2]
+		item["owner"] = row[3]
+		if userinfo:
+			item["is_owner"] = (row[3] == userinfo["username"])
+		else:
+			item["is_owner"] = False	
+		item["png_file"] = "%s.png" % (row[0])
+		
+		if textile:
+			item["png_file"] = "%s/%s/%s" % ("images",row[0],row[4])
+			
+		item["exp_file"] = "%s.exp" % (row[0])
+		item["media_path"] = drawing_www_path
+		if i >= start and i <= stop:
+			items.append(item)
+		i += 1		
+	
+	return template('draw/list',
+		items=items, userinfo=userinfo, page=page, pages=num_pages,
+		total=num_files, 
+		featured=featured,
+		page_link=page_link,
+		textile=textile,
+		is_admin = is_admin(userinfo),
+		gallery_active="active")    	
+
+
+###################        
+# drawing edit
+###################    
+@app.route('/draw/edit/<gid>')
+def draw_edit(db,gid=0):	
+	userinfo = is_logged_in(db)
+	if not userinfo:
+		return render_error(db,"NOT ALLOWED")
+		
+	c = db.execute('''select 
+					drawings.id, drawings.title, drawings.description, 
+					users.username, users.id, drawings.featured
+				from drawings left outer join users
+				on drawings.user_id = users.id 
+				where drawings.id = ?''',(gid,))
+	row = c.fetchone()
+
+	if not row:
+		return render_error(db,"File does not exist");	    
+
+	item = {}
+	item["id"] = row[0]
+	item["title"] = row[1]			
+	item["description"] = row[2]
+	item["owner"] = row[3]
+	item["owner_id"] = row[4]
+	if row[5]>0:
+		item["featured"] = "checked"
+	else:
+		item["featured"] = ""
+		
+	item["is_owner"] = (row[3] == userinfo["username"])
+	if not item["is_owner"] and not userinfo["is_admin"]:
+		return render_error(db,"NOT ALLOWED");	  
+				
+	item["png_file"] = "%s.png" % (item["id"])
+	item["exp_file"] = "%s.exp" % (item["id"])
+	item["svg_file"] = "%s.svg" % (item["id"])
+	item["pes_file"] = "%s.pes" % (item["id"])
+	item["media_path"] = drawing_www_path	
+	item["url"] =  request.url 
+	
+	return template('draw/edit', 
+		item=item, userinfo=userinfo,
+		is_admin=is_admin(userinfo),
+		gallery_active="active") 
+		
+@app.route('/draw/update/<gid>', method='POST')
+def draw_update(db,gid=0):
+	userinfo = is_logged_in(db)
+	submitted_title = request.forms.get('title').decode("utf-8")
+	submitted_description = strip_tags(request.forms.get('description')).decode("utf-8")
+	submitted_owner_id = request.forms.get('owner_id')
+	submitted_featured = request.forms.get('featured')
+	if submitted_featured == None:
+		submitted_featured = 0
+
+	c = db.execute('select user_id from drawings where id = ?', (gid,))
+	row = c.fetchone()
+	
+	if not row:
+		return render_error(db,"File does not exist");
+
+	if row[0] != userinfo["id"] and not is_admin(userinfo):
+		return render_error(db,"Not allowed");
+	
+	if is_admin(userinfo):
+		c = db.execute('update drawings set title = ?, description = ?, user_id = ?, featured = ? where id = ?', 
+				(submitted_title, submitted_description, submitted_owner_id, submitted_featured, gid ))
+	else:
+		c = db.execute('update drawings set title = ?, description = ? where id = ?', 
+				(submitted_title, submitted_description, gid))
+	db.commit()
+	message = "Your item was changed."	
+
+	return draw_view(db,gid,message)
+	
+
+@app.route('/draw/delete/<gid>')
+def gallery_delete(db,gid=0):
+	userinfo = is_logged_in(db)
+	if not userinfo:
+		return render_error(db,"NOT ALLOWED")
+
+	c = db.execute('''select user_id 
+				from drawings 
+				where id = ?''',(gid,))
+	row = c.fetchone()
+	if not row:
+		return render_error(db,"File does not exist");
+	else:
+		if row[0] == userinfo["id"] or userinfo["is_admin"]:
+			c = db.execute('delete from drawings where id=?',(gid,))
+			files = images = glob.glob("%s/%s.*" % (drawing_abs_path,gid));
+			for f in files:
+				os.unlink(f)
+			redirect("/draw/gallery")
+		else:
+			return render_error(db,"NOT ALLOWED")	
+			
 
 ###################################################
 # helper function 
@@ -1043,11 +1490,14 @@ def render_message(db,string,header=""):
 		message_header=header)		
 
 
+def get_host():
+	return "%s%s" % ("http://", request.urlparts[1])
+
 def get_gravatar_url(email,size=24):
-	#default = "http://www.example.com/default.jpg"
+	default = "%s/media/img/%s" % (get_host(), "turtle.png") 
 	gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(email.lower()).hexdigest() + "?"
-	#gravatar_url += urllib.urlencode({'d':default, 's':str(size)})	
-	gravatar_url += urllib.urlencode({'s':str(size)})	
+	gravatar_url += urllib.urlencode({'d':default, 's':str(size)})	
+	#gravatar_url += urllib.urlencode({'s':str(size)})	
 	return gravatar_url
 	
 	
