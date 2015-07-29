@@ -214,95 +214,75 @@ def gallery_list(db,page=1,featured=False,textile=False):
 def gallery_view(db,gid=0,message=False):
 	userinfo = is_logged_in(db)
 	
-	source="db"
-	if source == "files":
-		
-		item = {}
-		item["image"] = "%s/%s.png" % (upload_www_path,gid)
-		item["id"] = gid
-		item["file"] = "%s.png" % (gid)
-		item["exp_file"] = "%s.exp" % (gid)
-		item["pes_file"] = "%s.pes" % (gid)
-		item["png_file"] = "%s.png" % (gid)
-		item["svg_file"] = "%s.svg" % (gid)
-		item["snap_file"] = "%s.svg" % (gid)
-		item["url"] =  request.url 
-		item["media_path"] = upload_www_path
-		
-		if not os.path.isfile("%s/%s" % (upload_abs_path, item["exp_file"])):
-			return render_error(db,"File does not exist");
 
-		if not os.path.isfile("%s/%s" % (upload_abs_path, item["svg_file"])):
-			emb = stitchcode.Embroidery()
-			emb.import_melco("%s/%s" % (upload_abs_path, item["exp_file"]))
-			emb.scale(1.0)
-			emb.save_as_svg("%s/%s" % (upload_abs_path, item["svg_file"]))		
+	c = db.execute('''select 
+					designs.id, designs.title, designs.description, 
+					users.username 
+				from designs left outer join users
+				on designs.user_id = users.id 
+				where designs.id = ?''',(gid,))
+	row = c.fetchone()
+	if not row:
+		return render_error(db,"File does not exist");	    
 
-		return template('gallery/view', 
-			item=item, userinfo=userinfo,
-			message=message,
-			gallery_active="active")   
+	item = {}
+	item["id"] = row[0]
+	item["title"] = row[1]			
+	item["description"] = row[2]
+	item["owner"] = row[3]
+	if userinfo:
+		item["is_owner"] = (row[3] == userinfo["username"])
+	else:
+		item["is_owner"] = False			
+	item["png_file"] = "%s.png" % (item["id"])
+	item["exp_file"] = "%s.exp" % (item["id"])
+	item["svg_file"] = "%s.svg" % (item["id"])
+	item["dst_file"] = "%s.dst" % (item["id"])
+	item["pes_file"] = "%s.pes" % (item["id"])
+	item["snap_file"] = "%s.xml" % (item["id"])
+	item["media_path"] = upload_www_path	
+	item["url"] =  request.url 
 	
-	if source == "db":	
-		c = db.execute('''select 
-						designs.id, designs.title, designs.description, 
-						users.username 
-					from designs left outer join users
-					on designs.user_id = users.id 
-					where designs.id = ?''',(gid,))
-		row = c.fetchone()
-		if not row:
-			return render_error(db,"File does not exist");	    
-
-		item = {}
-		item["id"] = row[0]
-		item["title"] = row[1]			
-		item["description"] = row[2]
-		item["owner"] = row[3]
-		if userinfo:
-			item["is_owner"] = (row[3] == userinfo["username"])
-		else:
-			item["is_owner"] = False			
-		item["png_file"] = "%s.png" % (item["id"])
-		item["exp_file"] = "%s.exp" % (item["id"])
-		item["svg_file"] = "%s.svg" % (item["id"])
-		item["pes_file"] = "%s.pes" % (item["id"])
-		item["snap_file"] = "%s.xml" % (item["id"])
-		item["media_path"] = upload_www_path	
-		item["url"] =  request.url 
+	if not os.path.isfile("%s/%s" % (upload_abs_path, item["snap_file"])):
+		item["snap_file"] = False
 		
-		if not os.path.isfile("%s/%s" % (upload_abs_path, item["snap_file"])):
-			item["snap_file"] = False
-			
-		if not os.path.isfile("%s/%s" % (upload_abs_path, item["exp_file"])):
-			return render_error(db,"File does not exist");
+	if not os.path.isfile("%s/%s" % (upload_abs_path, item["exp_file"])):
+		return render_error(db,"File does not exist");
 
-		if not os.path.isfile("%s/%s" % (upload_abs_path, item["svg_file"])):
-			emb = stitchcode.Embroidery()
-			emb.import_melco("%s/%s" % (upload_abs_path, item["exp_file"]))
-			emb.scale(1.0)
-			emb.save_as_svg("%s/%s" % (upload_abs_path, item["svg_file"]))		
+	# if not exists generate SVG File
+	if not os.path.isfile("%s/%s" % (upload_abs_path, item["svg_file"])):
+		emb = stitchcode.Embroidery()
+		emb.import_melco("%s/%s" % (upload_abs_path, item["exp_file"]))
+		emb.scale(1.0)
+		emb.save_as_svg("%s/%s" % (upload_abs_path, item["svg_file"]))		
 
-		c = db.execute('''select id, name from designs_images whe
-							where design_id = ?''',(gid,))
-		row = c.fetchall()
-		if row:
-			item["images"] = []
-			for r in row:
-				img = {}
-				img["id"]= r[0]
-				img["name"]= r[1]
-				img["src"] = "%s/images/%s/%s" % (upload_www_path, gid, r[1]) 
-				item["images"].append(img)
+	# if not exists generate DST File
+	if not os.path.isfile("%s/%s" % (upload_abs_path, item["dst_file"])):
+		emb = stitchcode.Embroidery()
+		emb.import_melco("%s/%s" % (upload_abs_path, item["exp_file"]))
+		emb.scale(1.0)
+		emb.save_as_dst("%s/%s" % (upload_abs_path, item["dst_file"]))
 		
-		else:
-			item["images"] = False
-			
-		return template('gallery/view', 
-			item=item, userinfo=userinfo,
-			message=message,
-			is_admin = is_admin(userinfo),
-			gallery_active="active") 	
+	c = db.execute('''select id, name from designs_images whe
+						where design_id = ?''',(gid,))
+	row = c.fetchall()
+	if row:
+		item["images"] = []
+		for r in row:
+			img = {}
+			img["id"]= r[0]
+			img["name"]= r[1]
+			img["src"] = "%s/images/%s/%s" % (upload_www_path, gid, r[1]) 
+			item["images"].append(img)
+	
+	else:
+		item["images"] = False
+		
+	return template('gallery/view', 
+		item=item, userinfo=userinfo,
+		message=message,
+		is_admin = is_admin(userinfo),
+		gallery_active="active") 	
 					
 		
 ###################        
@@ -1258,6 +1238,7 @@ def draw_view(db,gid=0,message=False):
 		item["is_owner"] = False			
 	item["png_file"] = "%s.png" % (item["id"])
 	item["exp_file"] = "%s.exp" % (item["id"])
+	item["dst_file"] = "%s.dst" % (item["id"])
 	item["svg_file"] = "%s.svg" % (item["id"])
 	item["pes_file"] = "%s.pes" % (item["id"])
 	item["media_path"] = drawing_www_path	
@@ -1272,6 +1253,13 @@ def draw_view(db,gid=0,message=False):
 		emb.import_melco("%s/%s" % (drawing_abs_path, item["exp_file"]))
 		emb.scale(1.0)
 		emb.save_as_svg("%s/%s" % (drawing_abs_path, item["svg_file"]))		
+
+	if not os.path.isfile("%s/%s" % (drawing_abs_path, item["dst_file"])):
+		emb = stitchcode.Embroidery()
+		emb.import_melco("%s/%s" % (drawing_abs_path, item["exp_file"]))
+		emb.scale(1.0)
+		emb.save_as_dst("%s/%s" % (drawing_abs_path, item["dst_file"]))	
+
 		
 	return template('draw/view', 
 		item=item, userinfo=userinfo,
@@ -1281,6 +1269,7 @@ def draw_view(db,gid=0,message=False):
 							
 
 
+@app.route('/draw/gallery')
 @app.route('/draw/featured')
 @app.route('/draw/featured/<page>')
 def draw_featured(db,page=1,featured=False,textile=False):
@@ -1288,7 +1277,6 @@ def draw_featured(db,page=1,featured=False,textile=False):
 		
 @app.route('/draw/list')
 @app.route('/draw/all')
-@app.route('/draw/gallery')
 @app.route('/draw/page/<page>')
 def draw_list(db,page=1,featured=False,textile=False):
 	userinfo = is_logged_in(db)

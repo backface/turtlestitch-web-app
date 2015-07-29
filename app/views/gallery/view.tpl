@@ -31,10 +31,7 @@
 				{{l}}<br />
 			% end
 			</p>
-						
-			
-
-
+									
 			% if item['snap_file']:
 			<p class="dlink">
 				<span class="glyphicon glyphicon-edit" aria-hidden="true"></span> 
@@ -42,21 +39,21 @@
 			</p>	
 			% end		
 
-			
 			<h4>Download as image file</h4>
 			<p class="dlink">
 				<span class="glyphicon glyphicon-picture" aria-hidden="true"></span> 
-				<a href="{{item['media_path']}}/{{item['png_file']}}">{{item['png_file']}}</a><br />
+				<a href="{{item['media_path']}}/{{item['png_file']}}"  download="{{item['title']}}.png">{{item['png_file']}}</a><br />
 				<span class="glyphicon glyphicon-download" aria-hidden="true"></span> 
-				<a href="{{item['media_path']}}/{{item['svg_file']}}">{{item['svg_file']}}</a><br />
+				<a href="{{item['media_path']}}/{{item['svg_file']}}"  download="{{item['title']}}.svg">{{item['svg_file']}}</a><br />
 			</p>
 		
 			
 			<h4>Download as embroidery file</h4>
 			<p class="dlink">
 			<span class="glyphicon glyphicon-download" aria-hidden="true"></span> 
-				<a href="{{item['media_path']}}/{{item['exp_file']}}">{{item['exp_file']}}</a><br />
-				
+				<a href="{{item['media_path']}}/{{item['exp_file']}}" download="{{item['title']}}.exp">{{item['exp_file']}}</a> (Melco/EXP)<br />
+			<span class="glyphicon glyphicon-download" aria-hidden="true"></span> 
+				<a href="{{item['media_path']}}/{{item['dst_file']}}" download='g0001.dst'>{{item['dst_file']}}</a> (Tajima/DST)<br />
 			</p>
 			
 			% if item['snap_file']:
