@@ -26,6 +26,7 @@
 	<div class="col-md-5">
 
 <form id="profilmeFor" class="form-horizontal" method="post" action="/edit_profile">	
+
 	<div class="form-group has-feedback">
 	  <label for="email" class="control-label col-md-3">E-Mail:</label>
 	  <div class="input-group">
@@ -48,6 +49,17 @@
 		<span class="glyphicion form-control-feedback"></span>
 	  </div>
 	</div>	  
+	
+	<div class="form-group has-feedback">	  
+	  <label for="fullname" class="control-label col-md-3">Full name</label>
+	  <div class="input-group">
+		<div class="input-group-addon">
+		  <span class="glyphicon glyphicon-link"></span>
+		</div>
+		<input type="test" class="form-control" name="fullname" id="fullname"  value="{{fullname}}"/>
+		<span class="glyphicion form-control-feedback"></span>
+	  </div>
+	</div>		
 	
 	<div class="form-group pull-right">
 	  <label for="description" class="control-label">About me:</label>

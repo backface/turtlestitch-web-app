@@ -842,13 +842,13 @@ def page_view(db,slug=""):
 ###################  
 
 @app.route('/users')
-def user_list(db):
+def profiles_list(db, message = ""):
 	userinfo = is_logged_in(db)
 	if not userinfo:
 		return render_error(db,"Not logged in")
 	
 	c = db.execute('''select 
-			username, email, link, fullname, description  
+			username, email, link, fullname, description, id
 		from users order by timestamp''')
 		 
 	rows = c.fetchall();
@@ -861,12 +861,13 @@ def user_list(db):
 		item["link"] = row[2]			
 		item["fullname"] = row[3]
 		item["description"] = row[4]
+		item["id"] = row[5]
 		item["gravatar"] = get_gravatar_url(item["email"],96)
 		items.append(item)
 				
 	return template('user/list',
 		userinfo=userinfo, 
-		message="",
+		message=message,
 		items=items,
 		is_admin=is_admin(userinfo))
 
@@ -1025,8 +1026,12 @@ def profile_edit(db):
 	if description == None:
 		description = ""
 		
+	if fullname == None:
+		fullname = ""		
+		
 	return template('user/edit_profile',
 		userinfo=userinfo, 
+		fullname=fullname,
 		description= description,
 		message="", 
 		email=email, link=link)	
@@ -1054,10 +1059,11 @@ def profile_update(db):
 		message.append("E-Mail too long")
 				
 	if not error:	
-		c = db.execute('update users set email=?, link=?, description=? where username =?',
+		c = db.execute('update users set email=?, link=?, description=?, fullname=? where username =?',
 			(submitted_email, 
 			submitted_link, 
 			submitted_description.decode('utf8'), 
+			submitted_fullname.decode('utf8'),
 			userinfo["username"]))
 			
 		message = "Your profile was updated"
@@ -1074,6 +1080,154 @@ def profile_update(db):
 			fullname = submitted_fullname,
 			email=submitted_email)
 
+@app.route('/profile/edit/<uid>')
+def profile_edit_admin(db,uid):
+	userinfo = is_logged_in(db)
+	if not is_admin(userinfo):
+		return render_error(db,"Not allowed")
+	
+	c = db.execute('''select 
+			email, link, fullname, description, id, username 
+		from users where id = "%s"'''
+		 % (uid))
+		 
+	(email,link,fullname, description,user_id,user_name) = c.fetchone()	
+
+	if description == None:
+		description = ""
+		
+	if fullname == None:
+		fullname = ""		
+		
+	return template('user/edit_admin',
+		userinfo=userinfo, 
+		fullname=fullname,
+		description= description,
+		user_id=user_id, user_name=user_name,
+		message="", 
+		email=email, link=link)	
+
+@app.route('/profile/edit/<uid>',method="POST")
+def profile_update_admin(db, uid):
+	userinfo = is_logged_in(db)
+	if not is_admin(userinfo):
+		return render_error(db,"Not allowed")
+	is_me = True
+	user_name = request.forms.get('user_name')
+	submitted_link = request.forms.get('link')
+	submitted_email = request.forms.get('email')
+	submitted_fullname = request.forms.get('fullname').decode("utf-8")
+	submitted_description = request.forms.get('description').decode("utf-8")
+	submitted_password = request.forms.get('password')
+	submitted_confirm_password = request.forms.get('confirm_password')	
+	
+	message = []
+	error = False
+	has_password = False
+	
+	if len(submitted_email) < 1:
+		error = True
+		message.append("E-Mail is required")
+		
+	if len(submitted_email) > 50:
+		error = True
+		message.append("E-Mail too long")
+		
+	if len(submitted_password) > 0 and len(submitted_password) < 4:
+		error = True
+		message.append("Password is too short (min. 4 chars")
+	
+	else:
+		if len(submitted_password) > 4:
+			has_password = True
+			if len(submitted_password) > 15:
+				error = True
+				message.append("Password is too long (max. 15 chars")
+					
+			if submitted_password != submitted_confirm_password:
+				error = True
+				message.append("Passwords do not match")			
+				
+	if not error:	
+		if has_password:
+			password = crypt.crypt(submitted_password,salt)	
+			print password
+			c = db.execute('update users set email=?, link=?, description=?, fullname=?, password=? where id =?',
+				(	submitted_email, 
+					submitted_link, 
+					submitted_description.decode('utf8'), 
+					submitted_fullname.decode('utf8'),
+					password,
+					uid
+				))
+		else:
+			c = db.execute('update users set email=?, link=?, description=?, fullname=? where id =?',
+				(	submitted_email, 
+					submitted_link, 
+					submitted_description.decode('utf8'), 
+					submitted_fullname.decode('utf8'),
+					uid
+				))			
+			
+		message = {}
+		message["title"]  = "Success"
+		message["text"]  = "User updated %s " % (user_name)
+			
+		return profiles_list(db,message);
+		
+	else:		
+		return template('user/edit_admin', 
+			userinfo=userinfo,
+			user_id=uid,
+			user_name=user_name,
+			message=message, 
+			link=submitted_link,
+			description=submitted_description,
+			fullname = submitted_fullname,
+			email=submitted_email)
+
+
+@app.route('/profile/delete/<uid>')
+def profile_edit(db,uid):
+	userinfo = is_logged_in(db)
+	if not userinfo:
+		return render_error(db,"Not logged in")
+	if not is_admin(userinfo):
+		return render_error(db,"NOT ALLOWED")
+	
+	
+	c = db.execute('''select 
+			username, id 
+		from users where id = "%s"'''
+		 % (uid))
+		
+	item = {}
+	(item["username"],item["id"]) = c.fetchone()	
+		
+	return template('user/delete',
+		userinfo=userinfo, 
+		item=item,
+		message="")	
+		
+@app.route('/profile/delete/<uid>',method="POST")
+def profile_edit(db,uid):
+	userinfo = is_logged_in(db)
+	if not userinfo:
+		return render_error(db,"Not logged in")
+	if not is_admin(userinfo):
+		return render_error(db,"NOT ALLOWED")
+	
+	c = db.execute('''delete from designs where user_id = "%s"'''
+		 % (uid))
+	c = db.execute('''delete from users where id = "%s"'''
+		 % (uid))
+		
+	message = {}
+	message["title"]  = "Deleted"
+	message["text"]  = "delete user id %s " % (uid)
+		
+	return profiles_list(db,message);
+            		
 
 @app.route('/change_password')
 def password_change(db):

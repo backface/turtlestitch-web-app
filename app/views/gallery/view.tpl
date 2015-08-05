@@ -22,7 +22,9 @@
 			
 		</div>
 		<div class="col-md-4">
+		
 			<h2>{{item['title']}}</h2>
+		
 			<p>by <a href="/profile/{{item['owner']}}">{{item['owner']}}</a></p>
 			
 			% if item['description'] != "None":
@@ -40,20 +42,28 @@
 			% end		
 
 			<h4>Download as image file</h4>
+			
 			<p class="dlink">
 				<span class="glyphicon glyphicon-picture" aria-hidden="true"></span> 
-				<a href="{{item['media_path']}}/{{item['png_file']}}"  download="{{item['title']}}.png">{{item['png_file']}}</a><br />
+				<a href="{{item['media_path']}}/{{item['png_file']}}" download="{{item['title']}}.png">
+					{{item['png_file']}}</a><br />
 				<span class="glyphicon glyphicon-download" aria-hidden="true"></span> 
-				<a href="{{item['media_path']}}/{{item['svg_file']}}"  download="{{item['title']}}.svg">{{item['svg_file']}}</a><br />
+				<a href="{{item['media_path']}}/{{item['svg_file']}}"  download="{{item['title']}}.svg">
+					{{item['svg_file']}}</a><br />
 			</p>
 		
 			
 			<h4>Download as embroidery file</h4>
+			
 			<p class="dlink">
 			<span class="glyphicon glyphicon-download" aria-hidden="true"></span> 
-				<a href="{{item['media_path']}}/{{item['exp_file']}}" download="{{item['title']}}.exp">{{item['exp_file']}}</a> (Melco/EXP)<br />
+			<a href="{{item['media_path']}}/{{item['exp_file']}}" download="{{item['title']}}.exp">
+				{{item['exp_file']}}
+			</a> (Melco/EXP)<br />
 			<span class="glyphicon glyphicon-download" aria-hidden="true"></span> 
-				<a href="{{item['media_path']}}/{{item['dst_file']}}" download='g0001.dst'>{{item['dst_file']}}</a> (Tajima/DST)<br />
+			<a href="{{item['media_path']}}/{{item['dst_file']}}" download='g001.dst'>
+			{{item['dst_file']}}
+			</a> (Tajima/DST)<br />
 			</p>
 			
 			% if item['snap_file']:
