@@ -63,7 +63,7 @@
 			<span class="glyphicon glyphicon-download" aria-hidden="true"></span> 
 			<a href="{{item['media_path']}}/{{item['dst_file']}}" download='g001.dst'>
 			{{item['dst_file']}}
-			</a> (Tajima/DST)<br />
+			</a> (Tajima/DST - experimental!)<br />
 			</p>
 			
 			% if item['snap_file']:

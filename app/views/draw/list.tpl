@@ -21,7 +21,7 @@
 
     <ul class="pagination  pull-right">
 		%if featured:		
-			<li class="active"><a href="/gallery/featured">featured</a></li>
+			<li class="active"><a href="/draw/featured">featured</a></li>
 			<li><a href="/draw/all">all</a></li>
 		%elif textile:		
 			<li><a href="/draw/featured">featured</a></li>

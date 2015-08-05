@@ -1151,7 +1151,6 @@ def profile_update_admin(db, uid):
 	if not error:	
 		if has_password:
 			password = crypt.crypt(submitted_password,salt)	
-			print password
 			c = db.execute('update users set email=?, link=?, description=?, fullname=?, password=? where id =?',
 				(	submitted_email, 
 					submitted_link, 
