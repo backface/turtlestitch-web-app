@@ -4,7 +4,7 @@
 	<meta charset="utf-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
-	<title>TurtleStitch {{title or '!'}}</title>
+	<title>TurtleStitch {{title or ''}}</title>
 	
 	<link rel="shortcut icon" href="/media/img/favicon-32x32.png" type="image/png">	
 	<link rel="image_src" href="http://www.turtlestitch.org/media/img/turtlestitch_logo.png" / >
