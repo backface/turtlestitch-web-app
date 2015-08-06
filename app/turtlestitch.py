@@ -738,23 +738,20 @@ def profile_password_do_reminder(db):
 	message = ""
 	c = db.execute('select id, password from users where email = ?', (submitted_email,))	
 	row = c.fetchone()
-    
+   
 	if not row:
-		message = "Unknown email/n"
-	
+		message = "Unknown email."	
 		return template('user/password_reminder', 
 			userinfo=userinfo, 
 			email="",
 			message=message)
-	
 	else:
 		reset_id = str(int(time.time() * 1000))
 		c = db.execute('update users set reset=? where email = ? ', (reset_id, submitted_email,))	
 		send_mail(submitted_email,"do-no-reply@turtlestitch.org",
 			"Turtlestitch Password Reset Link",
-			"""You can reset you passsword following this link:\nn
-			http://www.turtlestitch.org/reset_password/%s\n\n
-			""" % (reset_id))
+			"You requested a reset of your password. Follow this link to create your new password:\n"+
+				"http://www.turtlestitch.org/reset_password/%s\n\n" % (reset_id))
 		
 		return template('user/password_reminder_sent', 
 				userinfo=userinfo) 
@@ -799,11 +796,8 @@ def profile_password_reset_update(db,rid):
 	if not error:	
 		password = crypt.crypt(submitted_password,salt)
 		c = db.execute('update users set password = ?, reset = ? where reset = ?', (password, "", rid,))
-		message = "Your password was changed."
-		return template('message', 
-			userinfo=userinfo, 
-			message=message,  
-			message_header="Success")
+		message = "Your password was changed. You can now login again."
+		return render_success(db, message)
 	else:		
 		return template('user/reset_password', 
 			userinfo=userinfo, 
@@ -1709,6 +1703,13 @@ def render_error(db,string):
 		userinfo=userinfo, 
 		message=string,  
 		message_header="Error")
+		
+def render_success(db,string):
+	userinfo = is_logged_in(db)	
+	return template('success', 
+		userinfo=userinfo, 
+		message=string,  
+		message_header="Success")		
 		
 def render_message(db,string,header=""):
 	userinfo = is_logged_in(dnb)	
