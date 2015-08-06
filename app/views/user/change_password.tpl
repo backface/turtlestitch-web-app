@@ -30,7 +30,7 @@
 		<div class="input-group-addon">
 		  <span class="glyphicon glyphicon-lock"></span>
 		</div>
-		<input type="password" class="form-control" name="old_password" id="old_password" placeholder="Old Password" pattern="\w{5,20}" />
+		<input type="password" required class="form-control" name="old_password" id="old_password" placeholder="Old Password" pattern="\w{5,20}" />
 		<span class="glyphicion form-control-feedback"></span>
 	  </div>
 	</div> 
@@ -41,7 +41,7 @@
 		<div class="input-group-addon">
 		  <span class="glyphicon glyphicon-lock"></span>
 		</div>
-		<input type="password" class="form-control" name="password" id="password" placeholder="New Password" pattern="\w{5,20}" />
+		<input type="password" required class="form-control" name="password" id="password" placeholder="New Password" pattern="\w{5,20}" />
 		<span class="glyphicion form-control-feedback"></span>
 	  </div>
 	</div> 

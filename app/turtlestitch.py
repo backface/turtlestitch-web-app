@@ -665,21 +665,7 @@ def get_user_id(db):
     else:
         return False        
         
-def is_admin(userinfo):
-    #session_id = request.get_cookie('session_id')    
-    #if not session_id: return False
-    #c = db.execute('select user_id from sessions where session_id = ?', (session_id,))
-    #row = c.fetchone()
-    #if row:
-	#	c = db.execute('select role from users where id = ?', (row[0],))
-	#	row = c.fetchone()
-	#	sys.stderr.write(row[0])
-	#	if row[0] == "admin":
-	#		return True
-	#	else:
-	#		return False
-    #else:
-    #    return False        
+def is_admin(userinfo):    
 	if not userinfo:
 		return False
 	else:
@@ -746,12 +732,18 @@ def profile_password_do_reminder(db):
 			email="",
 			message=message)
 	else:
-		reset_id = str(int(time.time() * 1000))
+		import hashlib
+		hash_object = hashlib.md5(str(int(time.time() * 1000)))
+		reset_id= hash_object.hexdigest()
 		c = db.execute('update users set reset=? where email = ? ', (reset_id, submitted_email,))	
 		send_mail(submitted_email,"do-no-reply@turtlestitch.org",
 			"Turtlestitch Password Reset Link",
-			"You requested a reset of your password. Follow this link to create your new password:\n"+
-				"http://www.turtlestitch.org/reset_password/%s\n\n" % (reset_id))
+			"You requested a reset of your password. Follow this link to create your new password:\n"
+				+ "http://www.turtlestitch.org/reset_password/%s\n\n" % (reset_id)
+				+ "Yours,\n"
+				+ "TurtleStitch\n"
+				+ "http://www.turtlestitch.org" 
+			)
 		
 		return template('user/password_reminder_sent', 
 				userinfo=userinfo) 
@@ -761,48 +753,59 @@ def profile_password_do_reminder(db):
 def profile_password_reset(db,rid):
 	userinfo = is_logged_in(db)
 	
-	c = db.execute('select id from users where reset = ?', (rid,))	
+	c = db.execute('select id, username from users where reset = ?', (rid,))	
 	row = c.fetchone()
     
 	if not row:
 		return render_error(db, "Invalid reset link")
 	else: 	
 		return template('user/reset_password', 
-			userinfo=userinfo, 
+			userinfo=userinfo,
+			user_name = row[1],
 			rid=rid,
 			message="",)	
             
 @app.route('/reset_password/<rid>',method="POST")
 def profile_password_reset_update(db,rid):
 	userinfo = is_logged_in(db)
-	submitted_password = request.forms.get('password')
-	submitted_confirm_password = request.forms.get('confirm_password')	
+	
+	c = db.execute('select id, username from users where reset = ?', (rid,))	
+	row = c.fetchone()
+    
+	if not row:
+		return render_error(db, "Invalid reset link")
+	else: 	
+		user_name = row[1]
+		submitted_password = request.forms.get('password')
+		submitted_confirm_password = request.forms.get('confirm_password')	
 
-	message = []
-	error = False
+		message = []
+		error = False
 
-	if len(submitted_password) < 4:
-		error = True
-		message.append("Password is too short (min. 4 chars")
+		if len(submitted_password) < 4:
+			error = True
+			message.append("Password is too short (min. 4 chars")
 
-	if len(submitted_password) > 15:
-		error = True
-		message.append("Password is too long (max. 15 chars")
-				
-	if submitted_password != submitted_confirm_password:
-		error = True
-		message.append("Passwords do not match")
-				
-	if not error:	
-		password = crypt.crypt(submitted_password,salt)
-		c = db.execute('update users set password = ?, reset = ? where reset = ?', (password, "", rid,))
-		message = "Your password was changed. You can now login again."
-		return render_success(db, message)
-	else:		
-		return template('user/reset_password', 
-			userinfo=userinfo, 
-			essage=message,  
-			message_header="Error")
+		if len(submitted_password) > 15:
+			error = True
+			message.append("Password is too long (max. 15 chars")
+					
+		if submitted_password != submitted_confirm_password:
+			error = True
+			message.append("Passwords do not match")
+					
+		if not error:	
+			password = crypt.crypt(submitted_password,salt)
+			c = db.execute('update users set password = ?, reset = ? where reset = ?', (password, "", rid,))
+			message = "Your password was changed. You can now login again."
+			return render_success(db, message)
+		else:		
+			return template('user/reset_password', 
+				userinfo=userinfo, 
+				user_name=user_name,
+				message=message, 
+				rid=rid,
+				message_header="Error")
 
 
 ###################           
@@ -1319,6 +1322,7 @@ def password_change(db):
 @app.route('/change_password',method="POST")
 def password_update(db):
 	userinfo = is_logged_in(db)
+	username = userinfo["username"]
 	if not userinfo:
 		return render_error(db,"Not logged in")	
 	submitted_old_password = request.forms.get('old_password')
@@ -1328,22 +1332,6 @@ def password_update(db):
 	message = []
 	error = False
 
-	if len(submitted_old_password) < 4:
-		error = True
-		message.append("Old Password is required (too short)")
-			
-	if len(submitted_password) < 4:
-		error = True
-		message.append("Password is too short (min. 4 chars")
-
-	if len(submitted_password) > 15:
-		error = True
-		message.append("Password is too long (max. 15 chars")
-				
-	if submitted_password != submitted_confirm_password:
-		error = True
-		message.append("Passwords do not match")
-
 	c = db.execute('select id, password from users where username = ?', (username,))
 	row = c.fetchone()		
 	if not row:
@@ -1352,21 +1340,34 @@ def password_update(db):
 	cryptedpassword = row[1]	
 	if not crypt.crypt(submitted_password,cryptedpassword) == cryptedpassword:
 		error = True
-		message.append("Old password invalid")
+		message.append("Old password is invalid.")
+	else:		
+		if len(submitted_old_password) < 4:
+			error = True
+			message.append("Old Password is required (too short)")
+				
+		if len(submitted_password) < 4:
+			error = True
+			message.append("Password is too short (min. 4 chars")
+
+		if len(submitted_password) > 15:
+			error = True
+			message.append("Password is too long (max. 15 chars")
+					
+		if submitted_password != submitted_confirm_password:
+			error = True
+		message.append("Passwords do not match")
 				
 	if not error:	
 		password = crypt.crypt(submitted_password,salt)
 		c = db.execute('update users set password = ? where username = ?', 
 			(password, username))
 		message = "Your password was changed."
-		return template('message', 
-			userinfo=userinfo, 
-			message=message,  
-			message_header="Success")
+		return render_success(db,message)
 	else:		
 		return template('user/change_password', 
 			userinfo=userinfo, 
-			essage=message,  
+			message=message,  
 			message_header="Error")
 
 ########################################################

@@ -66,7 +66,7 @@
 		<div class="input-group-addon">
 		  <span class="glyphicon glyphicon-lock"></span>
 		</div>
-		<input type="password" class="form-control" name="password" id="password" placeholder="Password" />
+		<input type="password" required class="form-control" name="password" id="password" placeholder="Password" />
 		<span class="glyphicion form-control-feedback"></span>
 	  </div>
 	</div> 
