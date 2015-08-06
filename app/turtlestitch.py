@@ -699,7 +699,7 @@ def do_login(db):
     submitted_username = request.forms.get('username')
     submitted_password = request.forms.get('password')
     
-    c = db.execute('select id, password from users where username = ?', (submitted_username,))
+    c = db.execute('select id, password from users where username = ? or email = ?', (submitted_username, submitted_username,))
     row = c.fetchone()
     if not row:
 		return template('user/login', userinfo=False, message="username or password do not match")
