@@ -1335,10 +1335,9 @@ def password_update(db):
 	c = db.execute('select id, password from users where username = ?', (username,))
 	row = c.fetchone()		
 	if not row:
-		return "INVALID USER"
-		
+		return "INVALID USER"		
 	cryptedpassword = row[1]	
-	if not crypt.crypt(submitted_password,cryptedpassword) == cryptedpassword:
+	if not crypt.crypt(submitted_old_password,cryptedpassword) == cryptedpassword:
 		error = True
 		message.append("Old password is invalid.")
 	else:		
