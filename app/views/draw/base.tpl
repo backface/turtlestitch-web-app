@@ -1,8 +1,7 @@
 
 <!DOCTYPE html>
-<html>
-<head>
 <html lang="en">
+<head>
 	<meta charset="utf-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -17,9 +16,10 @@
 
 	
 	<script type="text/javascript" src="/media/js/paper.js"></script>
-	<script type="text/javascript" src="/media/js/jquery.js"></script>
+	<script type="text/javascript" src="/media/js/jquery.min.js"></script>
 	<script type="text/javascript" src="/media/js/jquery.fileDownload.js"></script>
 	<script type="text/javascript" src="/media/js/baseurl.js"></script>
+	<script src="/media/js/bootstrap.min.js"></script>	
 	<script type="text/paperscript" canvas="myCanvas"  src="/media/js/stitchtimg.js"></script>
 
 	<link href='http://fonts.googleapis.com/css?family=Economica:400,700' rel='stylesheet' type='text/css'>

@@ -58,18 +58,19 @@
 		
 			<div class="spacer">&nbsp;</div>
 			
+			<div class="dropdown">
 			<button class="btn btn-default dropdown-toggle" type="button" id="sharebutton" data-toggle="dropdown">
 				<span class="glyphicon glyphicon-share" aria-hidden="true"></span> Share
 			</button>
 			<ul class="dropdown-menu" role="menu" aria-labelledby="sharebutton">
 				<li role="presentation">								 
-				  <a role="menuitem" tabindex="-1" href="https://twitter.com/share">
+				  <a role="menuitem" tabindex="-1" target="_blank" href="https://twitter.com/share">
 					<i class="fa fa-twitter fa-fw"></i>
 					Share on Twitter
 				  </a>
 				</li>
 				<li role="presentation">				
-				  <a role="menuitem" tabindex="-1" href="http://www.facebook.com/sharer.php">			
+				  <a role="menuitem" tabindex="-1" target="_blank" href="http://www.facebook.com/sharer.php">			
 					<i class="fa fa-facebook-official fa-fw"></i> Share on Facebook
 				  </a>
 				</li>				
@@ -79,6 +80,7 @@
 				  </a>
 				</li>												
 			</ul>
+			</div>
 			
 			<div class="spacer">&nbsp;</div>
  
