@@ -722,6 +722,93 @@ def do_logout(db):
     db.execute('delete from sessions where session_id = ?', (session_id,))
     response.delete_cookie('session_id')
     redirect('/login')
+    
+@app.route('/forgot_password')
+def profile_password_reminder(db):
+	userinfo = is_logged_in(db)
+	return template('user/password_reminder', 
+			userinfo=userinfo, 
+			email="",
+			message="")   
+
+@app.route('/forgot_password',method="POST")
+def profile_password_do_reminder(db):
+	userinfo = is_logged_in(db)
+	submitted_email = request.forms.get('email')
+	message = ""
+	c = db.execute('select id, password from users where email = ?', (submitted_email,))	
+	row = c.fetchone()
+    
+	if not row:
+		message = "Unknown email/n"
+	
+		return template('user/password_reminder', 
+			userinfo=userinfo, 
+			email="",
+			message=message)
+	
+	else:
+		reset_id = str(int(time.time() * 1000))
+		c = db.execute('update users set reset=? where email = ? ', (reset_id, submitted_email,))	
+		send_mail(submitted_email,"do-no-reply@turtlestitch.org",
+			"Turtlestitch Password Reset Link",
+			"""You can reset you passsword following this link:\nn
+			http://www.turtlestitch.org/reset_password/%s\n\n
+			""" % (reset_id))
+		
+		return template('user/password_reminder_sent', 
+				userinfo=userinfo) 
+
+
+@app.route('/reset_password/<rid>')
+def profile_password_reset(db,rid):
+	userinfo = is_logged_in(db)
+	
+	c = db.execute('select id from users where reset = ?', (rid,))	
+	row = c.fetchone()
+    
+	if not row:
+		return render_error(db, "Invalid reset link")
+	else: 	
+		return template('user/reset_password', 
+			userinfo=userinfo, 
+			rid=rid,
+			message="",)	
+            
+@app.route('/reset_password/<rid>',method="POST")
+def profile_password_reset_update(db,rid):
+	userinfo = is_logged_in(db)
+	submitted_password = request.forms.get('password')
+	submitted_confirm_password = request.forms.get('confirm_password')	
+
+	message = []
+	error = False
+
+	if len(submitted_password) < 4:
+		error = True
+		message.append("Password is too short (min. 4 chars")
+
+	if len(submitted_password) > 15:
+		error = True
+		message.append("Password is too long (max. 15 chars")
+				
+	if submitted_password != submitted_confirm_password:
+		error = True
+		message.append("Passwords do not match")
+				
+	if not error:	
+		password = crypt.crypt(submitted_password,salt)
+		c = db.execute('update users set password = ?, reset = ? where reset = ?', (password, "", rid,))
+		message = "Your password was changed."
+		return template('message', 
+			userinfo=userinfo, 
+			message=message,  
+			message_header="Success")
+	else:		
+		return template('user/reset_password', 
+			userinfo=userinfo, 
+			essage=message,  
+			message_header="Error")
 
 
 ###################           
@@ -1187,7 +1274,7 @@ def profile_update_admin(db, uid):
 
 
 @app.route('/profile/delete/<uid>')
-def profile_edit(db,uid):
+def profile_delete(db,uid):
 	userinfo = is_logged_in(db)
 	if not userinfo:
 		return render_error(db,"Not logged in")
@@ -1209,7 +1296,7 @@ def profile_edit(db,uid):
 		message="")	
 		
 @app.route('/profile/delete/<uid>',method="POST")
-def profile_edit(db,uid):
+def profile_do_delete(db,uid):
 	userinfo = is_logged_in(db)
 	if not userinfo:
 		return render_error(db,"Not logged in")
@@ -1659,6 +1746,20 @@ def strip_tags(html):
     s = MLStripper()
     s.feed(html)
     return s.get_data()	
+
+
+def send_mail(to, sender, subject, body):
+    sendmail_location = "/usr/sbin/sendmail" # sendmail location
+    p = os.popen("%s -t" % sendmail_location, "w")
+    p.write("From: %s\n" % sender)
+    p.write("To: %s\n" % to)
+    p.write("Subject:"+ subject + "\n")
+    p.write("\n") # blank line separating headers from body
+    p.write(body)
+    status = p.close()
+    if status != 0:
+           print "Sendmail exit status", status
+
 
 ###################################################
 # deployment 

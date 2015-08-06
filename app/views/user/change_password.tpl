@@ -57,7 +57,7 @@
 	  </div>	  
 	</div> 
 	
-  <div class=orm-group">
+  <div class=form-group">
 	<div class="col-md-3">  
 	   <div class="btn-group">    
 		<button class="btn btn-lg btn-primary btn-block" type="submit" id="update">Update</button>     
