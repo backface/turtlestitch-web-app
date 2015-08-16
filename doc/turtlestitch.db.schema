@@ -1,0 +1,84 @@
+CREATE TABLE users (
+id integer primary key, 
+username text not null unique, 
+email text not null unique, 
+password text not null, 
+role text,
+image text,
+link text, 
+fullname text, 
+description text,
+reset text,
+timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+
+CREATE TABLE pages(
+id integer primary key, 
+title text,
+slug text not null,
+content text,
+type text,
+timestamp DATETIME DEFAULT  CURRENT_TIMESTAMP
+);
+
+CREATE TABLE sessions(
+session_id text not null unique, 
+user_id integer not null, 
+timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, 
+foreign key (user_id)
+references users (id)
+);
+
+CREATE TABLE designs (
+id integer primary key, 
+user_id integer default 0, 
+title text not null,
+description text,
+private integer default 0,
+license text,
+project_file text,
+type text,
+license_id integer not null default 0,
+featured integer default 0,
+timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE designs_images(
+id integer primary key,  
+name text not null,
+design_id integer not null, 
+timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+foreign key (design_id)
+references designs (id)
+);
+
+CREATE TABLE designs_tags(
+id integer primary key, 
+design_id integer not null, 
+timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+foreign key (design_id)
+references designs (id)
+);
+
+CREATE TABLE licenses(
+id integer primary key, 
+title text not null,
+fulltext text,
+timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+
+
+CREATE TABLE drawings (
+id integer primary key, 
+user_id integer default 0, 
+title text not null,
+description text,
+private integer default 0,
+license text,
+license_id integer not null default 0,
+featured integer default 0,
+timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+

@@ -54,7 +54,7 @@ def upload(db):
 		ly = -99999999
 		
 		fid = str(int(time.time() * 1000))
-			
+
 		for i in range(0, len(xarr)):
 			x = float(xarr[i])
 			y = float(yarr[i])*-1;
