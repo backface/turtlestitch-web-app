@@ -15,6 +15,9 @@ install(SQLitePlugin(dbfile=os.path.dirname(__file__)+'/db/turtlestitch.db'))
 
 app = bottle.default_app()
 application = app
+
+#stitchcode settings.
+pixels_per_millimeter = 5
 salt = "2139080jikasf"
 
 # path settings
@@ -47,9 +50,7 @@ def upload(db):
 	name = request.POST.get('name').decode("utf-8")
 	
 	if len(xarr) == len(yarr) == len(jarr) and len(xarr) > 1:
-		pixels_per_millimeter = 10
 		emb = stitchcode.Embroidery()
-
 		lx = -99999999
 		ly = -99999999
 		
@@ -69,12 +70,13 @@ def upload(db):
 			ly = y
 			
 		emb.translate_to_origin()	
-		emb.scale(27.80/pixels_per_millimeter)
+		emb.scale(10/pixels_per_millimeter)
 		emb.flatten()
 		emb.add_endstitches_to_jumps(10)
 		emb.save_as_exp("%s/%s.exp" % (upload_abs_path,fid) )	
 		x,y = emb.getSize()
 		if x*y < 4000000:
+			emb.scale(pixels_per_millimeter/10.0)
 			emb.save_as_png("%s/%s.png" % (upload_abs_path,fid), True)
 		else:
 			print "image to big: %dx%d = %d" % (x,y,x*y)
