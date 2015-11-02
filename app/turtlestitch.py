@@ -42,7 +42,7 @@ def index(db):
 # upload handler
 ###################    
 @app.route('/upload',method='post')
-def upload(db):
+def gallery_upload(db):
 	xarr = request.POST.getlist("x[]")
 	yarr = request.POST.getlist("y[]")
 	jarr = request.POST.getlist("j[]")
@@ -76,7 +76,6 @@ def upload(db):
 		emb.save_as_exp("%s/%s.exp" % (upload_abs_path,fid) )	
 		x,y = emb.getSize()
 		if x*y < 4000000:
-			emb.scale(pixels_per_millimeter/10.0)
 			emb.save_as_png("%s/%s.png" % (upload_abs_path,fid), True)
 		else:
 			print "image to big: %dx%d = %d" % (x,y,x*y)
@@ -559,6 +558,11 @@ def show_index(db):
 	userinfo = is_logged_in(db)
 	return template('contact', userinfo=userinfo,  contact_active="active")        
 
+@app.route('/contact')
+def show_index(db):
+	userinfo = is_logged_in(db)
+	return template('contact', userinfo=userinfo,  contact_active="active")        
+
 	
 ###################            
 # CLOUD
@@ -918,6 +922,7 @@ def page_view(db,slug=""):
 		content=row[1],
 		is_admin = is_admin(userinfo),
 		slug = slug,
+		active = slug,
 		message="")		
 	else:
 		return render_error(db,"Page not found")   
@@ -1413,7 +1418,8 @@ def draw_upload(db):
 			emb.addStitch(stitchcode.Point(x,y,jump))	
 					
 		emb.translate_to_origin()	
-		emb.scale(27.80/pixels_per_millimeter)
+		#emb.scale(27.80/pixels_per_millimeter)
+		emb.scale(10/pixels_per_millimeter)
 		emb.flatten()
 		emb.add_endstitches_to_jumps(10)
 		emb.save_as_exp("%s/%s.exp" % (drawing_abs_path,fid) )	

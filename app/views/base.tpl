@@ -24,6 +24,12 @@
 	<script src="/media/js/bootstrap.min.js"></script>
 </head>
 <body> 
+% try:
+% 	active == None
+% except NameError:
+% 	active = "" 
+% end
+
     <nav class="navbar navbar-default navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
@@ -41,9 +47,10 @@
         </div>
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-            <li class="{{get('about_active', '')}}"><a href="/page/about">About</a></li>
+            <li class="{{'active' if active=='about' else ''}}"><a href="/page/about">About</a></li>
             <li class="{{get('gallery_active', '')}}"><a href="/gallery">Gallery</a></li>
-            <li class="{{get('run_active', '')}}"><a href="/run">Run</a></li>
+            <li class=""><a href="/run">Run</a></li>
+            <li class="{{'active' if active=='faq' else ''}}"><a href="/page/faq">FAQ</a></li>
             <li><a href="http://www.stitchcode.com/category/turtlestitch/">Blog</a></li>            
             <!--<li class="{{get('doc_active', '')}}"><a href="/docs">Documentation</a></li>-->
           </ul>
@@ -55,7 +62,7 @@
 				<li><a href="/signup">Sign Up</a></li>	
 				<li><a href="/login">Log In</a></li>			
 			%end
-			<li class="{{get('contact_active', '')}}"><a href="/page/contact">Contact</a></li>
+			<li class="{{'active' if active=='contact' else ''}}"><a href="/page/contact">Contact</a></li>
           </ul>
         </div>
       </div>

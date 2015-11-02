@@ -22,7 +22,7 @@
 
 <div class="row">
 	% for item in items:
-	<div class="col-sm-1 text-center cell">
+	<div class="col-md-1 text-center cell">
 	{{item['name']}}<br />
 	<a href="/profile/{{item['name']}}"><img class="img-responsive center-block" src="{{item['gravatar']}}" /></a><br />
 	

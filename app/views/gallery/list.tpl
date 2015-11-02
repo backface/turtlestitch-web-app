@@ -9,7 +9,7 @@
   
 	
 	%if pages > 1:	
-    <ul class="pagination  pull-right" style="padding-left:20px">
+    <ul class="pagination pull-right" style="padding-right:20px">
 			<li><a href="{{page_link}}/page/1">&laquo;</a></li>
 			% for cp in range(0,pages):
 				%if page == cp+1:
@@ -22,7 +22,7 @@
     </ul>
 	% end    
 
-    <ul class="pagination  pull-right">
+    <ul class="pagination pull-right" style="padding-right:20px">
 		%if featured:		
 			<li class="active"><a href="/gallery/featured">featured</a></li>
 			<li><a href="/gallery/textile">textile</a></li>
