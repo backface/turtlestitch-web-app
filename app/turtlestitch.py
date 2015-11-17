@@ -1402,7 +1402,6 @@ def draw_upload(db):
 		os.makedirs(drawing_abs_path)			
 	
 	if len(points) > 1:
-		pixels_per_millimeter = 10
 		emb = stitchcode.Embroidery()
 		lx = -99999999
 		ly = -99999999
@@ -1416,6 +1415,7 @@ def draw_upload(db):
 			else:
 				jump = False
 			emb.addStitch(stitchcode.Point(x,y,jump))	
+			ii += 1
 					
 		emb.translate_to_origin()	
 		#emb.scale(27.80/pixels_per_millimeter)
