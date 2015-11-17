@@ -1513,12 +1513,14 @@ def draw_view(db,gid=0,message=False):
 
 @app.route('/draw/gallery')
 @app.route('/draw/featured')
-@app.route('/draw/featured/<page>')
+@app.route('/draw/featured/page/<page>')
 def draw_featured(db,page=1,featured=False,textile=False):
 	return draw_list(db,page=page,featured=True,textile=False)
 		
 @app.route('/draw/list')
+@app.route('/draw/list/page/<page>')
 @app.route('/draw/all')
+@app.route('/draw/all/page/<page>')
 @app.route('/draw/page/<page>')
 def draw_list(db,page=1,featured=False,textile=False):
 	userinfo = is_logged_in(db)
@@ -1539,16 +1541,6 @@ def draw_list(db,page=1,featured=False,textile=False):
 		left outer join users
 		on drawings.user_id = users.id where drawings.featured = 1 
 		order by drawings.timestamp desc'''
-	if textile:
-		page_link = "/draw/textile"
-		query = '''select 
-				designs.id, designs.title, designs.description, users.username,
-				designs_images.name 
-			from designs 
-			left join users on designs.user_id=users.id 
-			left join designs_images on designs_images.design_id=designs.id 
-			where  designs_images.name != ""
-			order by designs.timestamp desc'''
 	c = db.execute(query)
 	rows = c.fetchall()
 	
