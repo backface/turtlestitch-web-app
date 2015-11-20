@@ -23,7 +23,7 @@
 	var raster;
 	
 	myEnd.strokeColor = endColor;
-	tool.fixedDistance = 5;
+	tool.fixedDistance = 10;
 
 
 	function log(str) {
