@@ -74,6 +74,13 @@ def gallery_upload(db):
 		emb.flatten()
 		emb.add_endstitches_to_jumps(10)
 		emb.save_as_exp("%s/%s.exp" % (upload_abs_path,fid) )	
+		
+		# re-open and re-load exp file
+		# need this as a work around for misinterpretation bug?
+		emb = stitchcode.Embroidery()
+		emb.import_melco("%s/%s.exp" % (upload_abs_path,fid) )	
+		emb.scale(1.0)
+
 		x,y = emb.getSize()
 		if x*y < 4000000:
 			emb.save_as_png("%s/%s.png" % (upload_abs_path,fid), True)
@@ -1423,6 +1430,12 @@ def draw_upload(db):
 		emb.flatten()
 		emb.add_endstitches_to_jumps(10)
 		emb.save_as_exp("%s/%s.exp" % (drawing_abs_path,fid) )	
+		
+		# re-open and re-load exp file
+		# need this as a work around for misinterpretation bug?
+		emb = stitchcode.Embroidery()
+		emb.import_melco("%s/%s.exp" % (upload_abs_path,fid) )
+		emb.scale(1.0)
 		x,y = emb.getSize()
 	
 		if x*y < 4000000:
