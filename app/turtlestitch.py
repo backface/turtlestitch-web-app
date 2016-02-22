@@ -1434,7 +1434,7 @@ def draw_upload(db):
 		# re-open and re-load exp file
 		# need this as a work around for misinterpretation bug?
 		emb = stitchcode.Embroidery()
-		emb.import_melco("%s/%s.exp" % (upload_abs_path,fid) )
+		emb.import_melco("%s/%s.exp" % (drawing_abs_path,fid) )
 		emb.scale(1.0)
 		x,y = emb.getSize()
 	
