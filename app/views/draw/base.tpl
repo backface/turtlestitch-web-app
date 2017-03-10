@@ -25,7 +25,6 @@
 	<link href='http://fonts.googleapis.com/css?family=Economica:400,700' rel='stylesheet' type='text/css'>
 	<style>
 		h1 {font-family: 'Economica', sans-serif;}
-		#myCanvas {background:#eeeeee;width:1000px;height:550px}
 		#result {font-size:10px;font-family:monospaced}
 		h1{text-transform:uppercase}
 	</style>

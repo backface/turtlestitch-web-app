@@ -35,7 +35,19 @@
 			</div>	
 		</div>
 	% end
+	
+	% if is_admin:
+		<div class="row">
+			<div class="col-md-5"></div>
+			<div class="col-md-4">
+				<p>
+				<a href="mailto:{{email}}"><span class="glyphicon glyphicon-envelope"></span> E-mail</a><br />
+				</p>
+			</div>	
+		</div>
+	% end	
 
+				
 	<div class="row">
 		<div class="col-md-5"></div>
 		<div class="col-md-4">

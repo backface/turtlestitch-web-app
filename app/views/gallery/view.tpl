@@ -61,16 +61,17 @@
 				{{item['exp_file']}}
 			</a> (Melco/EXP)<br />
 			<span class="glyphicon glyphicon-download" aria-hidden="true"></span> 
-			<a href="{{item['media_path']}}/{{item['dst_file']}}" download='g001.dst'>
+			<a href="{{item['media_path']}}/{{item['dst_file']}}" download='{{item['title']}}.dst'>
 			{{item['dst_file']}}
-			</a> (Tajima/DST - experimental!)<br />
+			</a> (Tajima/DST)<br />
 			</p>
 			
 			% if item['snap_file']:
 			<h4>Download as snap project file</h4>
 			<p class="dlink">
 				<span class="glyphicon glyphicon-download" aria-hidden="true"></span> 
-				<a href="{{item['media_path']}}/{{item['snap_file']}}">{{item['snap_file']}}</a><br />
+				<a href="{{item['media_path']}}/{{item['snap_file']}}" download='{{item['title']}}.xml'>
+				{{item['snap_file']}}</a><br />
 				
 			</p>	
 			% end	
@@ -106,8 +107,13 @@
 			<p>
 			% if is_admin or item['is_owner']:
 			<a href="/edit/{{item['id']}}"><span class="glyphicon glyphicon-edit"></span> edit</a><br />
-			<a href="/delete/{{item['id']}}"><span class="glyphicon glyphicon-remove"></span> delete</a>		
+			<a href="/delete/{{item['id']}}"><span class="glyphicon glyphicon-remove"></span> delete</a><br />	
 			% end
+
+			% if is_admin:
+			<a href="mailto:{{item['owner_email']}}"><span class="glyphicon glyphicon-envelope"></span> E-mail</a><br />
+			% end
+
 			</p>
 
 		</div>

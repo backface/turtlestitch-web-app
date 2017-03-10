@@ -19,6 +19,7 @@ application = app
 #stitchcode settings.
 pixels_per_millimeter = 5
 salt = "2139080jikasf"
+max_img_width = 5000
 
 # path settings
 upload_abs_path = "%s/../media/uploads" % (os.path.dirname(__file__))
@@ -82,7 +83,7 @@ def gallery_upload(db):
 		emb.scale(1.0)
 
 		x,y = emb.getSize()
-		if x*y < 4000000:
+		if x*y < max_img_width**2:
 			emb.save_as_png("%s/%s.png" % (upload_abs_path,fid), True)
 		else:
 			print "image to big: %dx%d = %d" % (x,y,x*y)
@@ -225,7 +226,7 @@ def gallery_view(db,gid=0,message=False):
 
 	c = db.execute('''select 
 					designs.id, designs.title, designs.description, 
-					users.username 
+					users.username, users.email
 				from designs left outer join users
 				on designs.user_id = users.id 
 				where designs.id = ?''',(gid,))
@@ -238,6 +239,7 @@ def gallery_view(db,gid=0,message=False):
 	item["title"] = row[1]			
 	item["description"] = row[2]
 	item["owner"] = row[3]
+	item["owner_email"] = row[4]
 	if userinfo:
 		item["is_owner"] = (row[3] == userinfo["username"])
 	else:
@@ -1105,6 +1107,7 @@ def profile_show(db,username=""):
 			gravatar_large=get_gravatar_url(email,96),
 			is_me=is_me,
 			is_admin=is_admin(userinfo),
+			email=email,
 			message="", header="")	
 
 
@@ -1394,7 +1397,11 @@ drawing_www_path = "%s/%s" % (upload_www_path, "drawings")
 @app.route('/draw')
 def draw(db):
 	userinfo = is_logged_in(db)
+	height = request.query.height or 550
+	width = request.query.width or 1000
 	return template('draw/draw', 
+		canvas_height=height,
+		canvas_width=width,
 		draw_active='active',
 		userinfo=userinfo)
 	
@@ -1438,7 +1445,7 @@ def draw_upload(db):
 		emb.scale(1.0)
 		x,y = emb.getSize()
 	
-		if x*y < 4000000:
+		if x*y < max_img_width**2:
 			emb.save_as_png("%s/%s.png" % (drawing_abs_path,fid), True)
 		else:
 			print "image to big: %dx%d = %d" % (x,y,x*y)

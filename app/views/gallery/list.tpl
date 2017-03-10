@@ -10,15 +10,27 @@
 	
 	%if pages > 1:	
     <ul class="pagination pull-right" style="padding-right:20px">
-			<li><a href="{{page_link}}/page/1">&laquo;</a></li>
+			<li><a href="{{page_link}}/page/1">&laquo;&laquo;</a></li>
+			%if page > 1:
+				<li><a href="{{page_link}}/page/{{page-1}}">&laquo;</a></li>
+			% end
 			% for cp in range(0,pages):
 				%if page == cp+1:
 					<li class="active"><span>{{cp+1}}</span></li>
-				% else:
-				<li><a href="{{page_link}}/page/{{cp+1}}">{{cp+1}}</a></li>
+				%elif page < cp+3 and page > cp - 1:
+					<li><a href="{{page_link}}/page/{{cp+1}}">{{cp+1}}</a></li>
+				%elif page < cp+4 and page > cp - 2:
+					% if page < cp:
+					<li><a href="{{page_link}}/page/{{page+2}}">..</a></li>
+					% elif page > cp:
+					<li><a href="{{page_link}}/page/{{page-2}}">..</a></li>
+					% end
 				% end
 			% end
-				<li><a href="{{page_link}}/page/{{pages}}">&raquo;</a></li>
+			%if page < pages:
+				<li><a href="{{page_link}}/page/{{page+1}}">&raquo;</a></li>
+			% end
+			<li><a href="{{page_link}}/page/{{pages}}">&raquo;&raquo;</a></li>
     </ul>
 	% end    
 
